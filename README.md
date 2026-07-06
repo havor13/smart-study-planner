@@ -3,6 +3,8 @@
 ## Favorite Quote
 > "Productivity is never an accident; it is always the result of intelligent planning." – Paul J. Meyer
 
+> "Start where you are. Use what you have. Do what you can."	Arthur Ashe
+
 ## 📌 Project Overview
 Smart Study Planner helps students organize study schedules, assignments, and deadlines efficiently. It provides a centralized platform to plan, track, and analyze study habits, improving productivity and consistency.
 
