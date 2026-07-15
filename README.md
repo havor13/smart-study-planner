@@ -39,8 +39,6 @@ Smart Study Planner helps students organize study schedules, assignments, and de
 
 - Weekly synchronous meeting: Thursdays @ 05:00
 
----
-
 ## 🚀 Getting Started
 
 1. Clone the repository:
@@ -62,3 +60,8 @@ npm install
 ```bash
 npm run dev
 ```
+
+## Environment Variables
+
+Create a `.env.local` file in the project root.
+Refer to `.env.example` for the required variables.
