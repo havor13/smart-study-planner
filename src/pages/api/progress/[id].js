@@ -1,5 +1,5 @@
-import { connectDB } from "../../../lib/mongodb";
-import Progress from "../../../models/Progress";
+import { connectDB } from "@/lib/mongodb";
+import Progress from "@/models/Progress";
 
 export default async function handler(req, res) {
   await connectDB();

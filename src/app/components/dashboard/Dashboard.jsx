@@ -42,7 +42,7 @@ const Dashboard = () => {
       {/* Welcome Message */}
       <div className="bg-blue-500 text-white p-8 rounded-2xl shadow-lg">
         <h1 className="text-3xl font-bold">👋 Welcome back, John!</h1>
-        <p className="text-blue-100 mt-2 text-lg">Here's your study overview for today</p>
+        <p className="text-blue-100 mt-2 text-lg">Here&apos;s your study overview for today</p>
       </div>
 
       {/* Stats Grid */}

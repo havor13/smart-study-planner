@@ -3,6 +3,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 
+const MODES = {
+  work: { label: 'Study Session', duration: 25, emoji: '📚' },
+  shortBreak: { label: 'Short Break', duration: 5, emoji: '☕' },
+  longBreak: { label: 'Long Break', duration: 15, emoji: '🌿' },
+};
+
 const PomodoroTimer = () => {
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
@@ -10,12 +16,6 @@ const PomodoroTimer = () => {
   const [mode, setMode] = useState('work');
   const [cycles, setCycles] = useState(0);
   const timerRef = useRef(null);
-
-  const modes = {
-    work: { label: 'Study Session', duration: 25, emoji: '📚' },
-    shortBreak: { label: 'Short Break', duration: 5, emoji: '☕' },
-    longBreak: { label: 'Long Break', duration: 15, emoji: '🌿' },
-  };
 
   useEffect(() => {
     if (isActive) {
@@ -29,14 +29,14 @@ const PomodoroTimer = () => {
               setCycles(newCycles);
               if (newCycles % 4 === 0) {
                 setMode('longBreak');
-                setMinutes(modes.longBreak.duration);
+                setMinutes(MODES.longBreak.duration);
               } else {
                 setMode('shortBreak');
-                setMinutes(modes.shortBreak.duration);
+                setMinutes(MODES.shortBreak.duration);
               }
             } else {
               setMode('work');
-              setMinutes(modes.work.duration);
+              setMinutes(MODES.work.duration);
             }
             setSeconds(0);
             return;
@@ -61,7 +61,7 @@ const PomodoroTimer = () => {
   const resetTimer = () => {
     setIsActive(false);
     setMode('work');
-    setMinutes(modes.work.duration);
+    setMinutes(MODES.work.duration);
     setSeconds(0);
     setCycles(0);
   };
@@ -71,7 +71,7 @@ const PomodoroTimer = () => {
   };
 
   const progress = () => {
-    const total = modes[mode].duration * 60;
+    const total = MODES[mode].duration * 60;
     const remaining = minutes * 60 + seconds;
     return ((total - remaining) / total) * 100;
   };
@@ -79,8 +79,8 @@ const PomodoroTimer = () => {
   return (
     <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 max-w-lg mx-auto">
       <div className="text-center">
-        <div className="text-4xl mb-2">{modes[mode].emoji}</div>
-        <h2 className="text-lg font-semibold text-gray-800">{modes[mode].label}</h2>
+        <div className="text-4xl mb-2">{MODES[mode].emoji}</div>
+        <h2 className="text-lg font-semibold text-gray-800">{MODES[mode].label}</h2>
         <p className="text-sm text-gray-500 mt-1">Cycles completed: {cycles}</p>
       </div>
 

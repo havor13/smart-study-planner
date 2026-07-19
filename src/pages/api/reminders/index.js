@@ -1,5 +1,5 @@
-import { connectDB } from "../../../lib/mongodb";
-import Reminder from "../../../models/Reminder";
+import { connectDB } from "@/lib/mongodb";
+import Reminder from "@/models/Reminder";
 
 export default async function handler(req, res) {
   await connectDB();
