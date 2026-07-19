@@ -11,7 +11,9 @@ export async function connectDB() {
 
   try {
     // No need for useNewUrlParser or useUnifiedTopology in Mongoose v6+
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    family: 4,
+});
 
     isConnected = conn.connections[0].readyState === 1;
     console.log("✅ Connected to MongoDB Atlas Cluster0");
