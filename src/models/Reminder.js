@@ -1,3 +1,6 @@
+// KEEP FOR NOW
+// For future implementation of reminders for tasks
+
 import mongoose from "mongoose";
 
 const ReminderSchema = new mongoose.Schema({
