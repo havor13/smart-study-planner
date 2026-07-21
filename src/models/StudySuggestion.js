@@ -1,3 +1,6 @@
+// KEEP FOR NOW
+// Useful for saving AI generated study plans in the future
+
 import mongoose from "mongoose";
 
 const StudySuggestionSchema = new mongoose.Schema({
