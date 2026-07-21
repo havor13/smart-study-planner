@@ -1,6 +1,6 @@
-// import dns from "node:dns";
-// dns.setServers(["1.1.1.1", "8.8.8.8"]);
-// Added this to bypass local DNS blocks to check the connection
+// mongo+srv querysrv ECONNREFUSED issue fix
+import { setServers } from "node:dns/promises";
+setServers(["1.1.1.1", "8.8.8.8"]);
 
 import mongoose from "mongoose";
 
