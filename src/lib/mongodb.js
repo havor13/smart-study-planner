@@ -7,18 +7,30 @@ import mongoose from "mongoose";
 let isConnected = false;
 
 export async function connectDB() {
-  if (isConnected) return;
+  // Check env variable exists
+  if (!process.env.MONGODB_URI) {
+    throw new Error("MONGODB_URI is not defined.");
+  }
+
+  // Any caller gets active connection object
+  if (isConnected) {
+    return mongoose.connections;
+  };
 
   try {
     // No need for useNewUrlParser or useUnifiedTopology in Mongoose v6+
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
-    family: 4,
-});
+      family: 4,
+    });
 
     isConnected = conn.connections[0].readyState === 1;
-    console.log("✅ Connected to MongoDB Atlas Cluster0");
+    console.log("✅ Connected to MongoDB");
+
+    return conn; // Return new connection; makes method reusable for multi calls
   } catch (err) {
     console.error("❌ MongoDB connection error:", err.message);
     throw err;
   }
 }
+
+export default connectDB;
