@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Edit2, Trash2, CheckCircle, Circle, Clock, AlertCircle } from 'lucide-react';
+import { Edit2, Trash2, CheckCircle, Circle, Clock } from 'lucide-react';
 
 const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -19,11 +19,7 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
   };
 
   const handleStatusToggle = () => {
-    const statusMap = {
-      pending: 'doing',
-      doing: 'completed',
-      completed: 'pending',
-    };
+    const statusMap = { pending: 'doing', doing: 'completed', completed: 'pending' };
     onToggle(task.id, statusMap[task.status]);
   };
 
@@ -47,7 +43,7 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
 
   return (
     <div 
-      className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all"
+      className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all hover:-translate-y-0.5"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -63,13 +59,13 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
             {task.description && (
               <p className="text-sm text-gray-500 mt-1">{task.description}</p>
             )}
-            <div className="flex items-center gap-3 mt-2">
-              <span className={`text-xs px-2 py-0.5 rounded-full ${priorityColors[task.priority]}`}>
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
+              <span className={`text-xs px-2.5 py-0.5 rounded-full ${priorityColors[task.priority]}`}>
                 {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
               </span>
-              {task.category && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                  {task.category}
+              {task.course && (
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
+                  {task.course}
                 </span>
               )}
               <span className="text-xs text-gray-400">
@@ -79,7 +75,7 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
           </div>
         </div>
         {isHovered && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 ml-2">
             <button 
               onClick={() => onEdit(task)}
               className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
