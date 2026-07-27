@@ -48,6 +48,7 @@ export default function LoginPage() {
   const isSignup = view === 'signup';
   const toggleView = () => setView(isSignup ? 'signin' : 'signup');
 
+  // Redirect if already logged in - REMOVED the /signup redirect
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) router.push('/');
