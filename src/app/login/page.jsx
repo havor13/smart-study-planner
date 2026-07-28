@@ -92,7 +92,27 @@ export default function LoginPage() {
       await updateProfile(userCredential.user, {
         displayName: formData.name,
       });
-      router.push('/');
+
+      const syncResponse = await fetch('api/users/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firebaseUid: userCredential.user.uid,
+          email: userCredential.user.email,
+          dsiplayName: formData.name,
+          photoURL: userCredential.user.photoURL,
+        }),
+      });
+
+      const syncData = await syncResponse.json();
+
+      if (!syncResponse.ok) {
+        throw new Error(syncData.message || 'Failed to sync user.');
+      }
+
+      router.replace('/');
     } catch (err) {
       setError(err.message);
     } finally {
