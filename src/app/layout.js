@@ -9,8 +9,7 @@ import './globals.css';
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
-  // Keep /signup in auth pages so it renders without sidebar
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const isAuthPage = pathname === '/login';
 
   if (isAuthPage) {
     return (
