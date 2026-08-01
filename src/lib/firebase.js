@@ -1,22 +1,24 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+// Keeping inline comments for future use - Julyanne
 
-// Your web app's Firebase configuration - DIRECT CONFIG
+// Import the functions you need from the SDKs you need
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAj0L9gZQNcEbyJggHZJYdMk8RCZIVgVJQ",
-  authDomain: "smart-study-planner-cse499.firebaseapp.com",
-  projectId: "smart-study-planner-cse499",
-  storageBucket: "smart-study-planner-cse499.firebasestorage.app",
-  messagingSenderId: "629321985081",
-  appId: "1:629321985081:web:00a35d3ea0cb131014f1e8"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
 
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.warn('Firebase persistence error:', error);
-});
-
-export { app, auth };
+// Initialize Firebase Auth
+export const auth = getAuth(app);
+export default app;
