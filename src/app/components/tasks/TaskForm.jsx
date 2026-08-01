@@ -9,7 +9,7 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
     description: task?.description || '',
     dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
     priority: task?.priority || 'medium',
-    category: task?.category || '',
+    course: task?.course || '',  // Changed from 'category' to 'course'
     status: task?.status || 'pending',
   });
 
@@ -22,18 +22,22 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-800">
             {task ? 'Edit Task' : 'Create New Task'}
           </h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+          <button 
+            onClick={onClose} 
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+          >
             <X size={24} className="text-gray-500" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Task Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Task Title *
@@ -42,11 +46,13 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="Enter task title..."
               required
             />
           </div>
 
+          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Description
@@ -55,10 +61,12 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows="3"
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="Add task details..."
             />
           </div>
 
+          {/* Due Date + Priority */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -68,7 +76,7 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
                 type="date"
                 value={formData.dueDate}
                 onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 required
               />
             </div>
@@ -80,7 +88,7 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -89,19 +97,21 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
             </div>
           </div>
 
+          {/* Course (replaces Category) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
+              Course
             </label>
             <input
               type="text"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              placeholder="e.g., School, Work, Personal"
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={formData.course}
+              onChange={(e) => setFormData({ ...formData, course: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="e.g., CSE 499, MATH 101"
             />
           </div>
 
+          {/* Status */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Status
@@ -109,7 +119,7 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
             >
               <option value="pending">Pending</option>
               <option value="doing">In Progress</option>
@@ -117,17 +127,18 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
             </select>
           </div>
 
+          {/* Buttons */}
           <div className="flex gap-3 pt-2">
             <button
               type="submit"
-              className="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-2 rounded-lg font-medium transition-colors"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-blue-200"
             >
               {task ? 'Update Task' : 'Create Task'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-medium transition-colors"
+              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold transition-all"
             >
               Cancel
             </button>
