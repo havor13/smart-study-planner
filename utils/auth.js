@@ -1,33 +1,33 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import admin from "@/lib/firebase";
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
-
-// Generate JWT
-export function generateToken(user) {
-  return jwt.sign(
-    { id: user._id, email: user.email },
-    JWT_SECRET,
-    { expiresIn: "7d" }
-  );
-}
-
-// Verify JWT
-export function verifyToken(token) {
+/**
+ * Verify Firebase ID token
+ * @param {string} token - Firebase ID token from client
+ * @returns {Promise<object|null>} Decoded user info (uid, email, etc.) or null if invalid
+ */
+export async function verifyFirebaseToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    const decoded = await admin.auth().verifyIdToken(token);
+    return decoded; // contains uid, email, etc.
   } catch (err) {
+    console.error("❌ Firebase token verification failed:", err.message);
     return null;
   }
 }
 
-// Hash password
-export async function hashPassword(password) {
-  const salt = await bcrypt.genSalt(10);
-  return bcrypt.hash(password, salt);
-}
-
-// Compare password
-export async function comparePassword(password, hash) {
-  return bcrypt.compare(password, hash);
+/**
+ * Sync Firebase user with MongoDB
+ * (called after verifying token)
+ * @param {string} firebaseUid - Firebase UID
+ * @param {string} email - User email
+ * @param {string} name - User name (matches User model)
+ * @returns {Promise<object>} MongoDB user document
+ */
+export async function syncUser(firebaseUid, email, name) {
+  const User = (await import("@/models/User")).default;
+  let user = await User.findOne({ firebaseUid });
+  if (!user) {
+    user = await User.create({ firebaseUid, email, name });
+  }
+  return user;
 }
