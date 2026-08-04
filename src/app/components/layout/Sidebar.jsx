@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import LogoutButton from '@/app/components/auth/LogoutButton';
 import { 
   LayoutDashboard, 
   CheckSquare, 
@@ -11,13 +12,7 @@ import {
   Timer,
   User,
   Settings,
-  LogOut,
-  Menu,
-  Home,
-  BookOpen,
-  Award,
-  Clock,
-  Users
+  Menu
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -116,10 +111,7 @@ const Sidebar = () => {
                   style={{ height: '44px' }}
                   title={isCollapsed ? item.label : ''}
                 >
-                  <div className={`
-                    flex items-center justify-center
-                    ${isCollapsed ? 'w-10' : 'w-10'}
-                  `}>
+                  <div className="flex items-center justify-center w-10">
                     <Icon size={20} className={`
                       transition-colors duration-200
                       ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}
@@ -144,30 +136,24 @@ const Sidebar = () => {
           </div>
         </nav>
 
-        {/* Bottom - Logout */}
+        {/* Bottom - Logout Button Component */}
         <div className={`
           p-3 border-t border-gray-100
           ${isCollapsed ? 'flex justify-center' : ''}
         `}>
-          <button
-            onClick={() => {
-              localStorage.removeItem('user');
-              window.location.href = '/login';
-            }}
+          <LogoutButton
+            showLabel={!isCollapsed}
+            label="Logout"
+            iconSize={20}
+            title={isCollapsed ? 'Logout' : ''}
             className={`
               group flex items-center rounded-lg text-sm font-medium
               text-red-500 hover:text-red-600 hover:bg-red-50
-              transition-all duration-200
+              transition-all duration-200 w-full
               ${isCollapsed ? 'justify-center px-0' : 'px-3'}
             `}
-            style={{ height: '44px' }}
-            title={isCollapsed ? 'Logout' : ''}
-          >
-            <div className="flex items-center justify-center w-10">
-              <LogOut size={20} className="text-red-400 group-hover:text-red-500 transition-colors" />
-            </div>
-            {!isCollapsed && <span className="ml-2">Logout</span>}
-          </button>
+            iconClassName="text-red-400 group-hover:text-red-500 transition-colors"
+          />
         </div>
 
         {/* Collapse Toggle - Desktop */}
