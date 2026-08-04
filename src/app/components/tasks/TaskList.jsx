@@ -49,7 +49,7 @@ const TaskList = ({ tasks = [], compact = false, onAddTask, onToggle, onEdit, on
         >
           <option value="all">All</option>
           <option value="pending">Pending</option>
-          <option value="doing">In Progress</option>
+          <option value="in-progress">In Progress</option>
           <option value="completed">Completed</option>
         </select>
         <select 
@@ -68,7 +68,7 @@ const TaskList = ({ tasks = [], compact = false, onAddTask, onToggle, onEdit, on
         {sortedTasks.length > 0 ? (
           sortedTasks.map(task => (
             <TaskItem 
-              key={task.id} 
+              key={task._id || task.id}
               task={task} 
               onToggle={onToggle}
               onEdit={onEdit}

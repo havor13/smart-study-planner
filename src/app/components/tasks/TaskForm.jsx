@@ -122,7 +122,7 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
             >
               <option value="pending">Pending</option>
-              <option value="doing">In Progress</option>
+              <option value="in-progress">In Progress</option>
               <option value="completed">Completed</option>
             </select>
           </div>

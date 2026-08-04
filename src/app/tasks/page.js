@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { auth } from '@/lib/firebase'; // 👈 Import your initialized Firebase client auth
+import { onAuthStateChanged } from 'firebase/auth';
 import TaskForm from '../components/tasks/TaskForm';
 import TaskList from '../components/tasks/TaskList';
 
@@ -8,78 +10,154 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Helper to get a fresh Firebase ID Token dynamically (no localStorage required)
+  const getAuthHeaders = async () => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("No authenticated Firebase user found");
+
+    const token = await user.getIdToken(); // Get fresh ID Token from Firebase SDK
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    };
+  };
+
+  // Wait for Firebase Auth state to resolve on initial load
   useEffect(() => {
-    const saved = localStorage.getItem('tasks');
-    if (saved) {
-      const parsed = JSON.parse(saved, (key, value) => {
-        if (key === 'dueDate') return new Date(value);
-        return value;
-      });
-      setTasks(parsed);
-    } else {
-      const defaultTasks = [
-        {
-          id: '1',
-          title: 'Complete CSE 499 Project Proposal',
-          description: 'Write and submit the project proposal document',
-          dueDate: new Date(2026, 6, 10),
-          priority: 'high',
-          status: 'doing',
-          course: 'CSE 499',
-        },
-        {
-          id: '2',
-          title: 'Study for Database Exam',
-          description: 'Review SQL queries and normalization',
-          dueDate: new Date(2026, 6, 15),
-          priority: 'high',
-          status: 'pending',
-          course: 'CSE 333',
-        },
-      ];
-      setTasks(defaultTasks);
-      localStorage.setItem('tasks', JSON.stringify(defaultTasks));
-    }
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await fetchTasks();
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const saveTasks = (newTasks) => {
-    setTasks(newTasks);
-    localStorage.setItem('tasks', JSON.stringify(newTasks));
+  const fetchTasks = async () => {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch('/api/tasks', { headers });
+
+      if (!res.ok) {
+        const rawText = await res.text();
+        console.error(`[API Error ${res.status}]:`, rawText);
+        throw new Error(`Failed to fetch tasks (Status: ${res.status})`);
+      }
+
+      const data = await res.json();
+      setTasks(data.tasks || []);
+    } catch (error) {
+      console.error('Fetch tasks error:', error);
+    }
   };
 
-  const handleAddTask = (taskData) => {
-    const newTask = {
-      ...taskData,
-      id: Date.now().toString(),
-      dueDate: new Date(taskData.dueDate)
-    };
-    saveTasks([newTask, ...tasks]);
-    setShowForm(false);
+  const handleAddTask = async (taskData) => {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(taskData),
+      });
+
+      if (!res.ok) throw new Error('Failed to create task');
+
+      const data = await res.json();
+      setTasks((prev) => [data.task, ...prev]);
+      setShowForm(false);
+    } catch (error) {
+      console.error('Add task error:', error);
+    }
   };
 
-  const handleEditTask = (taskData) => {
-    const updated = tasks.map(t => 
-      t.id === editingTask.id ? { ...taskData, id: t.id, dueDate: new Date(taskData.dueDate) } : t
+  const handleEditTask = async (taskData) => {
+    try {
+      const taskId = editingTask.id || editingTask._id;
+      const headers = await getAuthHeaders();
+
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(taskData),
+      });
+
+      if (!res.ok) throw new Error('Failed to update task');
+
+      const data = await res.json();
+      setTasks((prev) =>
+        prev.map((task) => ((task.id || task._id) === taskId ? data.task : task))
+      );
+
+      setEditingTask(null);
+      setShowForm(false);
+    } catch (error) {
+      console.error('Edit task error:', error);
+    }
+  };
+
+  const handleToggleTask = async (id, status) => {
+  if (!id) {
+    console.error('Toggle task error: Missing task ID');
+    return;
+  }
+
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/tasks/${id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ status }),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      console.error(`[Toggle Task Error ${res.status}]:`, errData);
+      throw new Error(errData.error || errData.message || 'Failed to toggle task');
+    }
+
+    const data = await res.json();
+    const updatedTask = data.task || data;
+
+    setTasks((prev) =>
+      prev.map((task) =>
+        (task._id === id || task.id === id) ? { ...task, ...updatedTask } : task
+      )
     );
-    saveTasks(updated);
-    setEditingTask(null);
-    setShowForm(false);
-  };
+  } catch (error) {
+    console.error('Toggle task error:', error);
+  }
+};
 
-  const handleToggleTask = (id, status) => {
-    const updated = tasks.map(t => t.id === id ? { ...t, status } : t);
-    saveTasks(updated);
-  };
+  const handleDeleteTask = async (id) => {
+    const confirmed = confirm('Delete this task?');
+    if (!confirmed) return;
 
-  const handleDeleteTask = (id) => {
-    saveTasks(tasks.filter(t => t.id !== id));
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: 'DELETE',
+        headers,
+      });
+
+      if (!res.ok) throw new Error('Failed to delete task');
+
+      setTasks((prev) => prev.filter((task) => (task.id || task._id) !== id));
+    } catch (error) {
+      console.error('Delete task error:', error);
+    }
   };
 
   const handleEditClick = (task) => {
     setEditingTask(task);
     setShowForm(true);
   };
+
+  if (loading) {
+    return <div className="p-4 text-gray-500">Loading tasks...</div>;
+  }
 
   return (
     <>
@@ -100,7 +178,7 @@ export default function TasksPage() {
         </button>
       </div>
 
-      <TaskList 
+      <TaskList
         tasks={tasks}
         onAddTask={() => {
           setEditingTask(null);
