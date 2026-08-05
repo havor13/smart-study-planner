@@ -6,10 +6,11 @@ import { AuthProvider } from './context/AuthContext';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import './globals.css';
+import ProtectedRoute from '@/app/components/auth/ProtectedRoute';
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const isAuthPage = pathname === '/login';
 
   if (isAuthPage) {
     return (
@@ -27,15 +28,17 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className="bg-slate-50 min-h-screen">
         <AuthProvider>
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <div className="flex-1 min-h-screen transition-all duration-300">
-              <Header />
-              <main className="p-6 max-w-7xl mx-auto">
-                {children}
-              </main>
+          <ProtectedRoute>
+            <div className="flex min-h-screen">
+              <Sidebar />
+              <div className="flex-1 min-h-screen transition-all duration-300">
+                <Header />
+                <main className="p-6 max-w-7xl mx-auto">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
+          </ProtectedRoute>
         </AuthProvider>
       </body>
     </html>
