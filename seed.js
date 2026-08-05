@@ -96,30 +96,21 @@ async function seedDatabase() {
     const createdCourses = await Course.insertMany([
       {
         userId,
-        courseCode: "CSE 499",
-        description: "Senior Design Project & Capstone Development",
-        startDate: new Date("2026-01-15"),
-        endDate: new Date("2026-05-15"),
+        courseCode: "CSE499",
       },
       {
         userId,
-        courseCode: "CS 310",
-        description: "Data Structures & Algorithms in Practice",
-        startDate: new Date("2026-01-15"),
-        endDate: new Date("2026-05-15"),
+        courseCode: "CS310",
       },
       {
         userId,
-        courseCode: "MATH 201",
-        description: "Linear Algebra & Probability for Computer Science",
-        startDate: new Date("2026-01-15"),
-        endDate: new Date("2026-05-15"),
+        courseCode: "MATH201",
       },
     ]);
 
-    const cse499 = createdCourses.find((c) => c.courseCode === "CSE 499");
-    const cs310 = createdCourses.find((c) => c.courseCode === "CS 310");
-    const math201 = createdCourses.find((c) => c.courseCode === "MATH 201");
+    const cse499 = createdCourses.find((c) => c.courseCode === "CSE499");
+    const cs310 = createdCourses.find((c) => c.courseCode === "CS310");
+    const math201 = createdCourses.find((c) => c.courseCode === "MATH201");
 
     // 4. Seed Tasks
     console.log("📝 Seeding tasks...");

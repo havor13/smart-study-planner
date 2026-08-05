@@ -3,7 +3,12 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
-const TaskForm = ({ task, onSubmit, onClose }) => {
+const TaskForm = ({
+  task,
+  courses = [],
+  onSubmit,
+  onClose,
+}) => {
   const [formData, setFormData] = useState({
     title: task?.title || '',
     description: task?.description || '',
@@ -15,9 +20,22 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const normalizedCode = formData.course
+        .toUpperCase()
+        .replace(/\s+/g, "");
+
+    const selectedCourse = courses.find(
+        c =>
+            c.courseCode
+                .toUpperCase()
+                .replace(/\s+/g, "") === normalizedCode
+    );
+
     onSubmit({
-      ...formData,
-      dueDate: new Date(formData.dueDate),
+        ...formData,
+        dueDate: new Date(formData.dueDate),
+        courseId: selectedCourse?._id || null,
     });
   };
 
@@ -102,13 +120,30 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Course
             </label>
+
             <input
-              type="text"
+              list="course-list"
               value={formData.course}
-              onChange={(e) => setFormData({ ...formData, course: e.target.value })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  course: e.target.value
+                    .toUpperCase()
+                    .replace(/\s+/g, ""),
+                })
+              }
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="e.g., CSE 499, MATH 101"
+              placeholder="Select or type a course"
             />
+
+            <datalist id="course-list">
+              {courses.map((course) => (
+                <option
+                  key={course._id}
+                  value={course.courseCode}
+                />
+              ))}
+            </datalist>
           </div>
 
           {/* Status */}

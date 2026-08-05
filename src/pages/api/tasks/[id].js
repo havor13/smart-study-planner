@@ -58,7 +58,7 @@ export default async function handler(req, res) {
         { _id: id, userId: authUser._id },
         { $set: updateData },
         { new: true, runValidators: true }
-      ).populate("courseId", "courseCode description");
+      ).populate("courseId", "courseCode");
 
       if (!updatedTask) {
         return res.status(404).json({ message: "Task not found or unauthorized" });

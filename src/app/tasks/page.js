@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { auth } from '@/lib/firebase'; // 👈 Import your initialized Firebase client auth
+import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import TaskForm from '../components/tasks/TaskForm';
 import TaskList from '../components/tasks/TaskList';
@@ -11,6 +11,7 @@ export default function TasksPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState([]);
 
   // Helper to get a fresh Firebase ID Token dynamically (no localStorage required)
   const getAuthHeaders = async () => {
@@ -28,7 +29,10 @@ export default function TasksPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        await fetchTasks();
+        await Promise.all([
+            fetchTasks(),
+            fetchCourses(),
+        ]);
       }
       setLoading(false);
     });
@@ -54,22 +58,79 @@ export default function TasksPage() {
     }
   };
 
+  const fetchCourses = async () => {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch("/api/courses", { headers });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch courses");
+      }
+
+      const data = await res.json();
+      setCourses(data);
+    } catch (error) {
+      console.error("Fetch courses error:", error);
+    }
+  };
+
   const handleAddTask = async (taskData) => {
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch('/api/tasks', {
-        method: 'POST',
+
+      const normalizedCode = taskData.course
+        .toUpperCase()
+        .replace(/\s+/g, "");
+
+      let course = courses.find(
+        (c) =>
+          c.courseCode.toUpperCase().replace(/\s+/g, "") === normalizedCode
+      );
+
+      if (!course) {
+        const courseRes = await fetch("/api/courses", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            courseCode: normalizedCode,
+          }),
+        });
+
+        if (!courseRes.ok) {
+          throw new Error("Failed to create course");
+        }
+
+        course = await courseRes.json();
+
+        setCourses((prev) => [...prev, course]);
+      }
+
+      const payload = {
+        ...taskData,
+        courseId: course._id,
+      };
+
+      delete payload.course;
+
+      const res = await fetch("/api/tasks", {
+        method: "POST",
         headers,
-        body: JSON.stringify(taskData),
+        body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error('Failed to create task');
+      if (!res.ok) throw new Error("Failed to create task");
 
       const data = await res.json();
-      setTasks((prev) => [data.task, ...prev]);
+
+      // Normalize courseId to the populated shape ({ _id, courseCode, ... })
+      // so tasks in state always look the same, regardless of whether they
+      // came from a populated GET or an unpopulated POST/PATCH response.
+      const enrichedTask = { ...data.task, courseId: course };
+
+      setTasks((prev) => [enrichedTask, ...prev]);
       setShowForm(false);
     } catch (error) {
-      console.error('Add task error:', error);
+      console.error("Add task error:", error);
     }
   };
 
@@ -78,23 +139,63 @@ export default function TasksPage() {
       const taskId = editingTask.id || editingTask._id;
       const headers = await getAuthHeaders();
 
+      const normalizedCode = taskData.course
+        .toUpperCase()
+        .replace(/\s+/g, "");
+
+      let course = courses.find(
+        (c) =>
+          c.courseCode.toUpperCase().replace(/\s+/g, "") === normalizedCode
+      );
+
+      if (!course) {
+        const courseRes = await fetch("/api/courses", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            courseCode: normalizedCode,
+          }),
+        });
+
+        if (!courseRes.ok) {
+          throw new Error("Failed to create course");
+        }
+
+        course = await courseRes.json();
+
+        setCourses((prev) => [...prev, course]);
+      }
+
+      const payload = {
+        ...taskData,
+        courseId: course._id,
+      };
+
+      delete payload.course;
+
       const res = await fetch(`/api/tasks/${taskId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers,
-        body: JSON.stringify(taskData),
+        body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error('Failed to update task');
+      if (!res.ok) throw new Error("Failed to update task");
 
       const data = await res.json();
+
+      // Same normalization as handleAddTask — keep courseId shape consistent
+      const enrichedTask = { ...data.task, courseId: course };
+
       setTasks((prev) =>
-        prev.map((task) => ((task.id || task._id) === taskId ? data.task : task))
+        prev.map((task) =>
+          (task.id || task._id) === taskId ? enrichedTask : task
+        )
       );
 
       setEditingTask(null);
       setShowForm(false);
     } catch (error) {
-      console.error('Edit task error:', error);
+      console.error("Edit task error:", error);
     }
   };
 
@@ -192,6 +293,7 @@ export default function TasksPage() {
       {showForm && (
         <TaskForm
           task={editingTask}
+          courses={courses}
           onSubmit={editingTask ? handleEditTask : handleAddTask}
           onClose={() => {
             setShowForm(false);

@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
-import { verifyAuth } from "@/utils/verifyAuth";
+import { verifyAuth } from "@utils/verifyAuth";
 import mongoose from "mongoose";
 
 export default async function handler(req, res) {

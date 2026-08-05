@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import Course from "@/models/Course";
-import { verifyAuth } from "@utils/auth";
+import { verifyAuth } from "@utils/verifyAuth";
 
 export default async function handler(req, res) {
   // Authenticate user and ensure DB connection
@@ -24,8 +24,12 @@ export default async function handler(req, res) {
   // POST: Create a new course for authenticated user
   if (req.method === "POST") {
     try {
-      const { courseCode, description, startDate, endDate } = req.body;
+      let { courseCode } = req.body;
 
+      courseCode = courseCode
+        .toUpperCase()
+        .replace(/\s+/g, "");
+        
       if (!courseCode) {
         return res.status(400).json({ error: "Course code is required"})
       }
@@ -33,9 +37,6 @@ export default async function handler(req, res) {
       const newCourse = new Course({
         userId: authUser._id,
         courseCode,
-        description,
-        startDate,
-        endDate
       });
 
       await newCourse.save();

@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       }
 
       const tasks = await Task.find(query)
-      .populate("courseId", "courseCode description")
+      .populate("courseId", "courseCode")
       .sort({ dueDate: 1 });
       
       return res.status(200).json({ tasks }); 

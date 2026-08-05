@@ -27,13 +27,10 @@ export default async function handler(req, res) {
   // PUT: Update a course by ID & owner
   if (req.method === "PUT") {
     try {
-      const { courseCode, description, startDate, endDate } = req.body;
+      const { courseCode } = req.body;
 
       const updateData = {};
       if (courseCode !== undefined) updateData.courseCode = courseCode;
-      if (description !== undefined) updateData.description = description;
-      if (startDate !== undefined) updateData.startDate = startDate;
-      if (endDate !== undefined) updateData.endDate = endDate;
     
       const updatedCourse = await Course.findOneAndUpdate(
         { _id: id, userId: authUser._id },
