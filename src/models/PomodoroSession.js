@@ -8,7 +8,7 @@ const pomodoroSessionSchema = new mongoose.Schema({
   durationMinutes: { type: Number, required: true },
   type: { type: String, enum: ["focus", "short_break", "long_break"], required: true },
   completed: { type: Boolean, default: false },
-});
+}, { timestamps: true });
 
 export default mongoose.models.PomodoroSession ||
   mongoose.model("PomodoroSession", pomodoroSessionSchema);

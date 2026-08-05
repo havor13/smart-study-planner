@@ -1,18 +1,12 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
-import { Bell, Search, ChevronDown, LogOut } from 'lucide-react';
+import { Bell, Search, ChevronDown } from 'lucide-react';
+import LogoutButton from '@/app/components/auth/LogoutButton';
 import { useAuth } from '@/app/context/AuthContext';
 
 const Header = () => {
-  const { user, logout } = useAuth();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await logout();
-    router.push('/login');
-  };
+  const { user } = useAuth();
 
   const getInitials = () => {
     if (user?.displayName) {
@@ -78,13 +72,11 @@ const Header = () => {
             </div>
             <div className="flex items-center gap-1">
               <ChevronDown size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
-              <button
-                onClick={handleLogout}
+              <LogoutButton
+                showLabel={false}
+                iconSize={16}
                 className="text-red-500 hover:text-red-700 transition-colors p-1 hover:bg-red-50 rounded-lg"
-                title="Logout"
-              >
-                <LogOut size={16} />
-              </button>
+              />
             </div>
           </div>
         </div>

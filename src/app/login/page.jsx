@@ -48,13 +48,33 @@ export default function LoginPage() {
   const isSignup = view === 'signup';
   const toggleView = () => setView(isSignup ? 'signin' : 'signup');
 
-  // Redirect if already logged in - REMOVED the /signup redirect
+  // Helper function to send Firebase user details to sync.js
+  const syncUserToMongoDB = async (user, fallbackName = '') => {
+    try {
+      await fetch('/api/users/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firebaseUid: user.uid,
+          email: user.email,
+          displayName: user.displayName || fallbackName,
+          photoURL: user.photoURL || '',
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to sync user with MongoDB:', err);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) router.push('/');
+      // Don't auto-redirect while manually processing login/signup submit
+      if (user && !loading) {
+        router.push('/');
+      }
     });
     return () => unsubscribe();
-  }, [router]);
+  }, [router, loading]);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -62,7 +82,11 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      
+      // Ensure sync completes before pushing to home page
+      await syncUserToMongoDB(userCredential.user);
+
       router.push('/');
     } catch (err) {
       setError(err.message);
@@ -89,9 +113,13 @@ export default function LoginPage() {
         formData.email,
         formData.password
       );
+
       await updateProfile(userCredential.user, {
         displayName: formData.name,
       });
+
+      await syncUserToMongoDB(userCredential.user, formData.name);
+
       router.push('/');
     } catch (err) {
       setError(err.message);

@@ -1,4 +1,6 @@
-import admin from "@/lib/firebase";
+import { adminAuth } from "@/lib/firebaseAdmin";
+import connectDB from "@/lib/mongodb";
+import User from "@/models/User";
 
 /**
  * Verify Firebase ID token
@@ -7,7 +9,7 @@ import admin from "@/lib/firebase";
  */
 export async function verifyFirebaseToken(token) {
   try {
-    const decoded = await admin.auth().verifyIdToken(token);
+    const decoded = await adminAuth.verifyIdToken(token);
     return decoded; // contains uid, email, etc.
   } catch (err) {
     console.error("❌ Firebase token verification failed:", err.message);
@@ -21,13 +23,14 @@ export async function verifyFirebaseToken(token) {
  * @param {string} firebaseUid - Firebase UID
  * @param {string} email - User email
  * @param {string} name - User name (matches User model)
+ * @param {string} [avatar] - Optional avatar URL
  * @returns {Promise<object>} MongoDB user document
  */
 export async function syncUser(firebaseUid, email, name) {
-  const User = (await import("@/models/User")).default;
+  await connectDB();
   let user = await User.findOne({ firebaseUid });
   if (!user) {
-    user = await User.create({ firebaseUid, email, name });
+    user = await User.create({ firebaseUid, email, name, avatar });
   }
   return user;
 }

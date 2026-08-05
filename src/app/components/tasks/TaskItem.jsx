@@ -6,6 +6,14 @@ import { Edit2, Trash2, CheckCircle, Circle, Clock } from 'lucide-react';
 const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  const taskId = task._id || task.id;
+
+  // Extract course code dynamically from populated object, direct key, or legacy prop
+  const courseCode =
+    typeof task.courseId === 'object' && task.courseId !== null
+      ? task.courseId.courseCode
+      : task.courseCode || task.course;
+
   const priorityColors = {
     high: 'bg-red-100 text-red-700',
     medium: 'bg-yellow-100 text-yellow-700',
@@ -14,13 +22,17 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
 
   const statusIcons = {
     completed: <CheckCircle className="text-green-600" size={20} />,
-    doing: <Clock className="text-yellow-600" size={20} />,
+    'in-progress': <Clock className="text-yellow-600" size={20} />,
     pending: <Circle className="text-gray-400" size={20} />,
   };
 
   const handleStatusToggle = () => {
-    const statusMap = { pending: 'doing', doing: 'completed', completed: 'pending' };
-    onToggle(task.id, statusMap[task.status]);
+    const statusMap = {
+      pending: 'in-progress',
+      'in-progress': 'completed',
+      completed: 'pending',
+    };
+    onToggle(taskId, statusMap[task.status]);
   };
 
   if (compact) {
@@ -61,19 +73,25 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
             )}
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <span className={`text-xs px-2.5 py-0.5 rounded-full ${priorityColors[task.priority]}`}>
-                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                {task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : ''}
               </span>
-              {task.course && (
+
+              {/* Render Course Code Badge */}
+              {courseCode && (
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
-                  {task.course}
+                  {courseCode}
                 </span>
               )}
-              <span className="text-xs text-gray-400">
-                Due: {new Date(task.dueDate).toLocaleDateString()}
-              </span>
+
+              {task.dueDate && (
+                <span className="text-xs text-gray-400">
+                  Due: {new Date(task.dueDate).toLocaleDateString()}
+                </span>
+              )}
             </div>
           </div>
         </div>
+
         {isHovered && (
           <div className="flex items-center gap-1 ml-2">
             <button 
@@ -83,7 +101,7 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
               <Edit2 size={16} className="text-gray-500" />
             </button>
             <button 
-              onClick={() => onDelete(task.id)}
+              onClick={() => onDelete(taskId)} 
               className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
             >
               <Trash2 size={16} className="text-red-500" />
