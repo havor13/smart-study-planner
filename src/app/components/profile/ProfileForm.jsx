@@ -19,6 +19,7 @@ import {
   Shield,
   Image as ImageIcon,
 } from 'lucide-react';
+import { getFriendlyAuthError } from '@/lib/firebaseErrors';
 
 export default function ProfileForm({ user, profile, updateProfile }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -98,14 +99,9 @@ export default function ProfileForm({ user, profile, updateProfile }) {
       resetForm();
     } catch (error) {
       console.error('Update error:', error);
-      const knownErrors = {
-        'auth/wrong-password': 'Current password is incorrect',
-        'auth/email-already-in-use': 'Email is already in use',
-        'auth/requires-recent-login': 'Please reauthenticate to update this field',
-      };
       setMessage({
         type: 'error',
-        text: knownErrors[error.code] || error.message || 'Failed to update profile',
+        text: getFriendlyAuthError(error),
       });
     } finally {
       setSaving(false);
@@ -113,9 +109,9 @@ export default function ProfileForm({ user, profile, updateProfile }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-        <div className="flex items-center justify-between">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-blue-100/60">
+      <div className="px-8 py-6 bg-linear-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
               {isEditing ? (
@@ -132,7 +128,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 text-sm"
+              className="flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 text-sm hover:scale-[1.02] active:scale-95"
             >
               <Edit2 size={16} />
               Edit Profile
@@ -149,6 +145,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
                 ? 'bg-green-50 text-green-700 border border-green-200'
                 : 'bg-red-50 text-red-700 border border-red-200'
             }`}
+            role={message.type === 'success' ? 'status' : 'alert'}
           >
             {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
             {message.text}
@@ -158,15 +155,6 @@ export default function ProfileForm({ user, profile, updateProfile }) {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Avatar Preview & URL */}
           <div className="flex items-center gap-3 mb-2">
-            {/* Fixed 48x48 box. w-12/h-12 = 3rem = 48px and are real Tailwind
-               classes; min-w-12/max-w-12/min-h-12 aren't part of Tailwind's
-               default scale (only keyword values like full/min/max/fit exist
-               for those), so they were silently doing nothing. Explicit
-               width/height attrs on the <img> guard against Tailwind
-               preflight's `img { height: auto }` overriding the aspect ratio
-               before the CSS loads. Icon and image are swapped via state
-               instead of layered, so there's only ever one thing filling
-               the box. */}
             <div className="w-12 h-12 shrink-0 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
               {form.avatar && !avatarError ? (
                 <img
@@ -315,7 +303,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex-1 bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-95"
               >
                 <Save size={18} />
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -328,7 +316,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
                   resetForm();
                   setMessage({ type: '', text: '' });
                 }}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3.5 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2"
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3.5 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 active:scale-95"
               >
                 <X size={18} />
                 Cancel
