@@ -44,6 +44,11 @@ export default async function handler(req, res) {
         // Keep name/avatar updated if changed in Firebase
         let hasChanges = false;
 
+        if (user.email !== email) {
+            user.email = email;
+            hasChanges = true;
+        }
+
         if (userName && user.name !== userName) {
             user.name = userName;
             hasChanges = true;
@@ -59,8 +64,9 @@ export default async function handler(req, res) {
         }
 
         return res.status(200).json({
-            success: true,
-            message: "Sync endpoint reached.",
+            message: hasChanges
+                ? "User synchronized successfully."
+                : "User already up to date."
         });
     } catch (error) {
         console.error(error);
