@@ -4,15 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { getFriendlyAuthError } from '@/lib/firebaseErrors';
 import './login.css';
-
-const SSOButtons = () => (
-  <div className="sso">
-    <a className="sso-btn">f</a>
-    <a className="sso-btn">🐦</a>
-    <a className="sso-btn">in</a>
-  </div>
-);
 
 const Hero = ({ type, active, title, text, buttonText, onClick }) => (
   <div className={`hero ${type} ${active ? 'active' : ''}`}>
@@ -27,8 +20,6 @@ const Hero = ({ type, active, title, text, buttonText, onClick }) => (
 const AuthForm = ({ type, active, title, children, onSubmit }) => (
   <div className={`form ${type} ${active ? 'active' : ''}`}>
     <h2>{title}</h2>
-    <SSOButtons />
-    <p className="or-text">Or use your email address</p>
     <form onSubmit={onSubmit}>{children}</form>
   </div>
 );
@@ -46,7 +37,10 @@ export default function LoginPage() {
   });
 
   const isSignup = view === 'signup';
-  const toggleView = () => setView(isSignup ? 'signin' : 'signup');
+  const toggleView = () => {
+    setView(isSignup ? 'signin' : 'signup');
+    setError('');
+  };
 
   // Helper function to send Firebase user details to sync.js
   const syncUserToMongoDB = async (user, fallbackName = '') => {
@@ -83,13 +77,13 @@ export default function LoginPage() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      
+
       // Ensure sync completes before pushing to home page
       await syncUserToMongoDB(userCredential.user);
 
       router.push('/');
     } catch (err) {
-      setError(err.message);
+      setError(getFriendlyAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -101,7 +95,7 @@ export default function LoginPage() {
     setLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('Passwords do not match. Please try again.');
       setLoading(false);
       return;
     }
@@ -122,7 +116,7 @@ export default function LoginPage() {
 
       router.push('/');
     } catch (err) {
-      setError(err.message);
+      setError(getFriendlyAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -131,8 +125,8 @@ export default function LoginPage() {
   return (
     <section className="login-page">
       <div className="login-card">
-        <div 
-          className="card-bg" 
+        <div
+          className="card-bg"
           style={{ transform: isSignup ? 'translateX(0)' : 'translateX(100%)' }}
         />
 
@@ -145,9 +139,9 @@ export default function LoginPage() {
           onClick={toggleView}
         />
 
-        <AuthForm 
-          type="signup" 
-          active={isSignup} 
+        <AuthForm
+          type="signup"
+          active={isSignup}
           title="Create Account"
           onSubmit={handleSignUp}
         >
@@ -155,31 +149,35 @@ export default function LoginPage() {
             type="text"
             placeholder="Full Name"
             value={formData.name}
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
           />
           <input
             type="email"
             placeholder="Email"
             value={formData.email}
-            onChange={(e) => setFormData({...formData, email: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
           />
           <input
             type="password"
             placeholder="Password"
             value={formData.password}
-            onChange={(e) => setFormData({...formData, password: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             required
           />
           <input
             type="password"
             placeholder="Confirm Password"
             value={formData.confirmPassword}
-            onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             required
           />
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <div className="error-message" role="alert">
+              {error}
+            </div>
+          )}
           <button type="submit" disabled={loading}>
             {loading ? 'Creating Account...' : 'SIGN UP'}
           </button>
@@ -194,9 +192,9 @@ export default function LoginPage() {
           onClick={toggleView}
         />
 
-        <AuthForm 
-          type="signin" 
-          active={!isSignup} 
+        <AuthForm
+          type="signin"
+          active={!isSignup}
           title="Sign In"
           onSubmit={handleSignIn}
         >
@@ -204,18 +202,21 @@ export default function LoginPage() {
             type="email"
             placeholder="Email"
             value={formData.email}
-            onChange={(e) => setFormData({...formData, email: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
           />
           <input
             type="password"
             placeholder="Password"
             value={formData.password}
-            onChange={(e) => setFormData({...formData, password: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             required
           />
-          <a className="forgot-link">Forgot password?</a>
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <div className="error-message" role="alert">
+              {error}
+            </div>
+          )}
           <button type="submit" disabled={loading}>
             {loading ? 'Signing In...' : 'SIGN IN'}
           </button>
