@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
 const TaskForm = ({
@@ -8,15 +8,25 @@ const TaskForm = ({
   courses = [],
   onSubmit,
   onClose,
+  readOnly = false,
 }) => {
   const [formData, setFormData] = useState({
     title: task?.title || '',
     description: task?.description || '',
     dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
     priority: task?.priority || 'medium',
-    course: task?.course || '',  // Changed from 'category' to 'course'
+    course: task?.course || task?.courseCode || task?.courseId?.courseCode || '',  // Changed from 'category' to 'course'
     status: task?.status || 'pending',
   });
+
+  // Close the modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && onClose) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -39,16 +49,30 @@ const TaskForm = ({
     });
   };
 
+  const inputClass = (disabled = readOnly) =>
+    `w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+      disabled
+        ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed'
+        : 'border-gray-200 bg-white'
+    }`;
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-800">
-            {task ? 'Edit Task' : 'Create New Task'}
+            {readOnly ? 'Task Details' : task ? 'Edit Task' : 'Create New Task'}
           </h2>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Close"
           >
             <X size={24} className="text-gray-500" />
           </button>
@@ -64,9 +88,10 @@ const TaskForm = ({
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className={inputClass()}
               placeholder="Enter task title..."
               required
+              disabled={readOnly}
             />
           </div>
 
@@ -79,8 +104,9 @@ const TaskForm = ({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows="3"
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className={inputClass()}
               placeholder="Add task details..."
+              disabled={readOnly}
             />
           </div>
 
@@ -94,8 +120,9 @@ const TaskForm = ({
                 type="date"
                 value={formData.dueDate}
                 onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className={inputClass()}
                 required
+                disabled={readOnly}
               />
             </div>
 
@@ -106,7 +133,8 @@ const TaskForm = ({
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                className={inputClass()}
+                disabled={readOnly}
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -132,8 +160,9 @@ const TaskForm = ({
                     .replace(/\s+/g, ""),
                 })
               }
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className={inputClass()}
               placeholder="Select or type a course"
+              disabled={readOnly}
             />
 
             <datalist id="course-list">
@@ -154,7 +183,8 @@ const TaskForm = ({
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+              className={inputClass()}
+              disabled={readOnly}
             >
               <option value="pending">Pending</option>
               <option value="in-progress">In Progress</option>
@@ -164,19 +194,31 @@ const TaskForm = ({
 
           {/* Buttons */}
           <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-blue-200"
-            >
-              {task ? 'Update Task' : 'Create Task'}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold transition-all"
-            >
-              Cancel
-            </button>
+            {readOnly ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold transition-all"
+              >
+                Close
+              </button>
+            ) : (
+              <>
+                <button
+                  type="submit"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-blue-200"
+                >
+                  {task ? 'Update Task' : 'Create Task'}
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold transition-all"
+                >
+                  Cancel
+                </button>
+              </>
+            )}
           </div>
         </form>
       </div>
