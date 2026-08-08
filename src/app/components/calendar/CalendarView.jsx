@@ -27,6 +27,7 @@ const CalendarView = () => {
   const { user } = useAuth();
   const [events, setEvents] = useState([]);
   const [view, setView] = useState('month');
+  const [date, setDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -149,6 +150,8 @@ const CalendarView = () => {
             view={view}
             onView={setView}
             views={['month', 'week', 'day']}
+            date={date}
+            onNavigate={(newDate) => setDate(newDate)}
             style={{ height: '100%' }}
             className="rounded-lg"
             eventPropGetter={eventStyleGetter}
