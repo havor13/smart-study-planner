@@ -1,173 +1,108 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  EmailAuthProvider, 
-  reauthenticateWithCredential, 
-  verifyBeforeUpdateEmail, 
-  updateProfile, 
-  updatePassword 
+import { useState } from 'react';
+import {
+  updateEmail,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
 } from 'firebase/auth';
-import { 
-  Edit2, 
-  User, 
-  CheckCircle, 
-  AlertCircle, 
-  ImageIcon, 
-  Mail, 
-  Key, 
-  Shield, 
-  Save, 
-  X 
+import {
+  User,
+  Mail,
+  Save,
+  AlertCircle,
+  CheckCircle,
+  Edit2,
+  X,
+  Key,
+  Shield,
+  Image as ImageIcon,
 } from 'lucide-react';
-import { auth } from '@/lib/firebase';
 import { getFriendlyAuthError } from '@/lib/firebaseErrors';
 
-export default function ProfileForm() {
+export default function ProfileForm({ user, profile, updateProfile }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [avatarError, setAvatarError] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
 
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    avatar: '',
+    name: profile?.name || user?.displayName || '',
+    email: profile?.email || user?.email || '',
+    avatar: profile?.avatar || user?.photoURL || '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
 
-  // Populate form with current Firebase user data on mount
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (user) {
-      setForm((prev) => ({
-        ...prev,
-        name: user.displayName || '',
-        email: user.email || '',
-        avatar: user.photoURL || '',
-      }));
-    }
-  }, []);
-
   const resetForm = () => {
-    const user = auth.currentUser;
-    if (user) {
-      setForm({
-        name: user.displayName || '',
-        email: user.email || '',
-        avatar: user.photoURL || '',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-    }
-  };
-
-  const syncUserToMongoDB = async (user, overrideName, overrideAvatar) => {
-    try {
-      await fetch('/api/users/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firebaseUid: user.uid,
-          email: user.email,
-          displayName: overrideName ?? user.displayName,
-          photoURL: overrideAvatar ?? user.photoURL,
-        }),
-      });
-    } catch (err) {
-      console.error('Failed to sync user with MongoDB:', err);
-    }
+    setForm({
+      name: profile?.name || user?.displayName || '',
+      email: profile?.email || user?.email || '',
+      avatar: profile?.avatar || user?.photoURL || '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setAvatarError(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage({ type: '', text: '' });
     setSaving(true);
-
-    const user = auth.currentUser;
-    if (!user) {
-      setMessage({ type: 'error', text: 'No authenticated user found.' });
-      setSaving(false);
-      return;
-    }
-
-    const isEmailChanging = form.email.trim().toLowerCase() !== user.email?.toLowerCase();
-    const isPasswordChanging = Boolean(form.newPassword);
-    const isProfileChanging = 
-      form.name !== (user.displayName || '') || 
-      form.avatar !== (user.photoURL || '');
-
-    // Password confirmation checks
-    if (isPasswordChanging && form.newPassword !== form.confirmPassword) {
-      setMessage({ type: 'error', text: 'New passwords do not match.' });
-      setSaving(false);
-      return;
-    }
-
-    if ((isEmailChanging || isPasswordChanging) && !form.currentPassword) {
-      setMessage({
-        type: 'error',
-        text: 'Please enter your current password to authorize email or password changes.',
-      });
-      setSaving(false);
-      return;
-    }
+    setMessage({ type: '', text: '' });
 
     try {
-      // Re-authenticate user if updating email or password
-      if (isEmailChanging || isPasswordChanging) {
+      // 1. Update MongoDB profile details (name and avatar)
+      const hasNameChanged = form.name !== profile?.name;
+      const hasAvatarChanged = form.avatar !== profile?.avatar;
+
+      if (hasNameChanged || hasAvatarChanged) {
+        await updateProfile({
+          name: form.name.trim(),
+          avatar: form.avatar.trim(),
+        });
+      }
+
+      // 2. Email / password update in Firebase Auth
+      const wantsEmailChange = form.email !== user?.email;
+      const wantsPasswordChange = Boolean(form.newPassword);
+
+      if ((wantsEmailChange || wantsPasswordChange) && form.currentPassword) {
         const credential = EmailAuthProvider.credential(user.email, form.currentPassword);
         await reauthenticateWithCredential(user, credential);
+
+        if (wantsEmailChange) {
+          await updateEmail(user, form.email.trim());
+        }
+
+        if (wantsPasswordChange) {
+          if (form.newPassword !== form.confirmPassword) {
+            setMessage({ type: 'error', text: 'New passwords do not match' });
+            setSaving(false);
+            return;
+          }
+          if (form.newPassword.length < 6) {
+            setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+            setSaving(false);
+            return;
+          }
+          await updatePassword(user, form.newPassword);
+        }
       }
 
-      // Update Name & Photo in Firebase Profile
-      if (isProfileChanging) {
-        await updateProfile(user, {
-          displayName: form.name,
-          photoURL: form.avatar,
-        });
-        await syncUserToMongoDB(user, form.name, form.avatar);
-      }
-
-      // Update Password if specified
-      if (isPasswordChanging) {
-        await updatePassword(user, form.newPassword);
-      }
-
-      // Trigger Email Verification for new address
-      if (isEmailChanging) {
-        // TODO: Requires testing in production version 
-        const actionCodeSettings = {
-          url: `${window.location.origin}/login?emailVerified=true`,
-          handleCodeInApp: true,
-        };
-
-        await verifyBeforeUpdateEmail(user, form.email, actionCodeSettings);
-        setMessage({
-          type: 'success',
-          text: `Verification link sent to ${form.email}! Please check your inbox (and spam/junk folder) to complete your email update.`,
-        });
-      } else if (isProfileChanging || isPasswordChanging) {
-        setMessage({ type: 'success', text: 'Profile updated successfully.' });
-      } else {
-        setMessage({ type: 'success', text: 'No changes were detected.' });
-      }
-
-      // Reset sensitive fields and turn off editing mode on success
-      setForm((prev) => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      }));
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setIsEditing(false);
       setShowPasswordFields(false);
-    } catch (err) {
-      setMessage({ type: 'error', text: getFriendlyAuthError(err) });
+      resetForm();
+    } catch (error) {
+      console.error('Update error:', error);
+      setMessage({
+        type: 'error',
+        text: getFriendlyAuthError(error),
+      });
     } finally {
       setSaving(false);
     }
@@ -192,7 +127,6 @@ export default function ProfileForm() {
           </div>
           {!isEditing && (
             <button
-              type="button"
               onClick={() => setIsEditing(true)}
               className="flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 text-sm hover:scale-[1.02] active:scale-95"
             >
@@ -204,20 +138,6 @@ export default function ProfileForm() {
       </div>
 
       <div className="p-8">
-        {message.text && (
-          <div
-            className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
-              message.type === 'success'
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'bg-red-50 text-red-700 border border-red-200'
-            }`}
-            role={message.type === 'success' ? 'status' : 'alert'}
-          >
-            {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-            {message.text}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Avatar Preview & URL */}
           <div className="flex items-center gap-3 mb-2">
@@ -301,27 +221,24 @@ export default function ProfileForm() {
             />
           </div>
 
-          {/* Current Password Field (Always visible during edit mode to confirm security changes) */}
-          {isEditing && (
-            <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
-              <label className="block text-sm font-semibold text-amber-900">
-                <Shield size={16} className="inline mr-1 text-amber-600" />
-                Current Password Required
-              </label>
-              <p className="text-xs text-amber-700">
-                Enter your password to verify your identity when changing your email address or password.
-              </p>
-              <input
-                type="password"
-                value={form.currentPassword}
-                onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
-                placeholder="Enter current password"
-                className="w-full px-4 py-3 border border-amber-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-sm"
-              />
+          {/* Success / Error message - placed between the name/email block and the
+              password section so it stays in view while changing passwords and
+              on shorter screens */}
+          {message.text && (
+            <div
+              className={`p-4 rounded-xl flex items-center gap-3 animate-fade-slide-in ${
+                message.type === 'success'
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}
+              role={message.type === 'success' ? 'status' : 'alert'}
+            >
+              {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+              {message.text}
             </div>
           )}
 
-          {/* Optional Password Settings Toggle */}
+          {/* Password Settings */}
           {isEditing && (
             <button
               type="button"
@@ -329,7 +246,7 @@ export default function ProfileForm() {
               className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
             >
               <Key size={16} />
-              {showPasswordFields ? 'Hide password fields' : 'Change account password'}
+              {showPasswordFields ? 'Hide password fields' : 'Change password'}
             </button>
           )}
 
@@ -337,8 +254,21 @@ export default function ProfileForm() {
             <div className="space-y-4 p-5 bg-gray-50 rounded-xl border border-gray-200">
               <div className="flex items-center gap-2 mb-2">
                 <Shield size={16} className="text-blue-500" />
-                <h4 className="text-sm font-semibold text-gray-700">New Password</h4>
+                <h4 className="text-sm font-semibold text-gray-700">Change Password</h4>
                 <span className="text-xs text-gray-400 ml-2">(Optional)</span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1.5">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  value={form.currentPassword}
+                  onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
+                  placeholder="Enter current password"
+                  className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white hover:border-blue-300"
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

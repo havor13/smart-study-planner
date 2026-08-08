@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react';
 import { Edit2, Trash2, CheckCircle, Circle, Clock } from 'lucide-react';
+import ConfirmModal from './ConfirmModal';
 
 const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const taskId = task._id || task.id;
 
@@ -35,6 +37,15 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
     onToggle(taskId, statusMap[task.status]);
   };
 
+  const handleDeleteClick = () => {
+    setConfirmDelete(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setConfirmDelete(false);
+    onDelete(taskId);
+  };
+
   if (compact) {
     return (
       <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
@@ -54,62 +65,78 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
   }
 
   return (
-    <div 
-      className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all hover:-translate-y-0.5"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-3 flex-1">
-          <button onClick={handleStatusToggle} className="mt-1 hover:scale-110 transition-transform">
-            {statusIcons[task.status]}
-          </button>
-          <div className="flex-1">
-            <h3 className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-              {task.title}
-            </h3>
-            {task.description && (
-              <p className="text-sm text-gray-500 mt-1">{task.description}</p>
-            )}
-            <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <span className={`text-xs px-2.5 py-0.5 rounded-full ${priorityColors[task.priority]}`}>
-                {task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : ''}
-              </span>
-
-              {/* Render Course Code Badge */}
-              {courseCode && (
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
-                  {courseCode}
-                </span>
+    <>
+      <div
+        className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all hover:-translate-y-0.5"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-3 flex-1">
+            <button onClick={handleStatusToggle} className="mt-1 hover:scale-110 transition-transform">
+              {statusIcons[task.status]}
+            </button>
+            <div className="flex-1">
+              <h3 className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                {task.title}
+              </h3>
+              {task.description && (
+                <p className="text-sm text-gray-500 mt-1">{task.description}</p>
               )}
-
-              {task.dueDate && (
-                <span className="text-xs text-gray-400">
-                  Due: {new Date(task.dueDate).toLocaleDateString()}
+              <div className="flex items-center gap-3 mt-2 flex-wrap">
+                <span className={`text-xs px-2.5 py-0.5 rounded-full ${priorityColors[task.priority]}`}>
+                  {task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : ''}
                 </span>
-              )}
+
+                {/* Render Course Code Badge */}
+                {courseCode && (
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
+                    {courseCode}
+                  </span>
+                )}
+
+                {task.dueDate && (
+                  <span className="text-xs text-gray-400">
+                    Due: {new Date(task.dueDate).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {isHovered && (
-          <div className="flex items-center gap-1 ml-2">
-            <button 
+          <div
+            className={`flex items-center gap-1 ml-2 transition-opacity duration-200 ${
+              isHovered ? 'opacity-100' : 'md:opacity-0 md:focus-within:opacity-100'
+            }`}
+          >
+            <button
               onClick={() => onEdit(task)}
               className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Edit2 size={16} className="text-gray-500" />
             </button>
-            <button 
-              onClick={() => onDelete(taskId)} 
+            <button
+              onClick={handleDeleteClick}
               className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
             >
               <Trash2 size={16} className="text-red-500" />
             </button>
           </div>
-        )}
+        </div>
       </div>
-    </div>
+
+      {/* Delete confirmation modal (replaces the browser confirm()) */}
+      {confirmDelete && (
+        <ConfirmModal
+          title="Delete task?"
+          message={`Are you sure you want to delete "${task.title}"? This action cannot be undone.`}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmDelete(false)}
+        />
+      )}
+    </>
   );
 };
 
