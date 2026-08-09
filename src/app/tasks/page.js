@@ -233,9 +233,7 @@ export default function TasksPage() {
 };
 
   const handleDeleteTask = async (id) => {
-    const confirmed = confirm('Delete this task?');
-    if (!confirmed) return;
-
+    // Confirmation is handled by the ConfirmModal in TaskItem
     try {
       const headers = await getAuthHeaders();
       const res = await fetch(`/api/tasks/${id}`, {

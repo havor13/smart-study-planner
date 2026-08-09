@@ -40,22 +40,27 @@ export default function ProfileCard({ user, profile }) {
 
       <div className="px-6 pb-6">
         <div className="flex flex-col items-center -mt-10">
-          {/* Avatar with gradient ring */}
-          <div className="p-1.5 rounded-3xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/60">
-            <div className="w-20 h-20 rounded-2xl bg-white overflow-hidden flex items-center justify-center">
-              {avatar && !avatarError ? (
+          {/* Avatar with gradient ring.
+              The photo renders on its own white layer with a higher stacking
+              order so the gradient never covers it; the no-photo fallback is
+              a WHITE icon so it doesn't blend with the blue gradient. */}
+          <div className="relative z-10 p-1.5 rounded-3xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/60">
+            {avatar && !avatarError ? (
+              <div className="w-20 h-20 rounded-2xl bg-white overflow-hidden">
                 <img
                   src={avatar}
                   alt="Avatar"
                   width={80}
                   height={80}
-                  className="w-20 h-20 object-cover"
+                  className="w-20 h-20 object-cover relative z-10"
                   onError={() => setAvatarError(true)}
                 />
-              ) : (
-                <UserCircle size={48} className="text-blue-500" />
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="w-20 h-20 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                <UserCircle size={44} className="text-white/95" />
+              </div>
+            )}
           </div>
 
           <div className="text-center mt-3 w-full">
