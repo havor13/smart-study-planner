@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import connectDB from "./src/lib/mongodb.js";
 
 // Load environment variables
-dotenv.config({ path: ".env.local" });
+dotenv.config({ path: ".env" });
 
 // Define Schemas / Import Models
 const userSchema = new mongoose.Schema(

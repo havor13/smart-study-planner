@@ -7,6 +7,9 @@ import mongoose from "mongoose";
 let isConnected = false;
 
 export async function connectDB() {
+  // Debug: show what env variable is actually set
+  console.log("🔧 DB_URL from env:", process.env.MONGODB_URI);
+
   // Check env variable exists
   if (!process.env.MONGODB_URI) {
     throw new Error("MONGODB_URI is not defined.");
@@ -15,7 +18,7 @@ export async function connectDB() {
   // Any caller gets active connection object
   if (isConnected) {
     return mongoose.connections;
-  };
+  }
 
   try {
     // No need for useNewUrlParser or useUnifiedTopology in Mongoose v6+
