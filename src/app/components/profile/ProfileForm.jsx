@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/app/context/AuthContext";
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
@@ -26,6 +27,7 @@ import { getFriendlyAuthError } from "@/lib/firebaseErrors";
 // (kept as a prop per Doc 2's architecture, aliased on import to avoid
 // clashing with Firebase's own `updateProfile`).
 export default function ProfileForm({ user, profile, updateProfile }) {
+  const { refreshUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -118,6 +120,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
           name: form.name.trim(),
           avatar: form.avatar.trim(),
         });
+        await refreshUser();
       }
 
       // Update password if specified
