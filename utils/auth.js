@@ -1,6 +1,6 @@
-import { adminAuth } from "@/lib/firebaseAdmin";
-import connectDB from "@/lib/mongodb";
-import User from "@/models/User";
+import { adminAuth } from '@/lib/firebaseAdmin';
+import connectDB from '@/lib/mongodb';
+import User from '@/models/User';
 
 /**
  * Verify Firebase ID token
@@ -12,7 +12,7 @@ export async function verifyFirebaseToken(token) {
     const decoded = await adminAuth.verifyIdToken(token);
     return decoded; // contains uid, email, etc.
   } catch (err) {
-    console.error("❌ Firebase token verification failed:", err.message);
+    console.error('❌ Firebase token verification failed:', err.message);
     return null;
   }
 }

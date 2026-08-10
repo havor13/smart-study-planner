@@ -77,9 +77,7 @@ const ProgressChart = ({ tasks = [] }) => {
           label: (context) => {
             const course = categories[context.dataIndex];
             const stats = courseCounts[course];
-            return stats
-              ? `Completed: ${stats.completed} of ${stats.total}`
-              : 'No tasks';
+            return stats ? `Completed: ${stats.completed} of ${stats.total}` : 'No tasks';
           },
         },
       },
@@ -112,18 +110,14 @@ const ProgressChart = ({ tasks = [] }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="bg-white p-4 rounded-xl border border-gray-50">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">
-          Task Status Distribution
-        </h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Task Status Distribution</h3>
         <div className="h-[220px] relative flex items-center justify-center">
           <Pie data={pieData} options={pieOptions} />
         </div>
       </div>
 
       <div className="bg-white p-4 rounded-xl border border-gray-50">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">
-          Completed Tasks by Course
-        </h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Completed Tasks by Course</h3>
         <div className="h-[220px] relative">
           <Bar data={barData} options={barOptions} />
         </div>

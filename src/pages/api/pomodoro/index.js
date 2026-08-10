@@ -1,6 +1,6 @@
-import { connectDB } from "@/lib/mongodb";
-import PomodoroSession from "@/models/PomodoroSession";
-import { verifyAuth } from "@utils/verifyAuth";
+import { connectDB } from '@/lib/mongodb';
+import PomodoroSession from '@/models/PomodoroSession';
+import { verifyAuth } from '@utils/verifyAuth';
 
 export default async function handler(req, res) {
   const auth = await verifyAuth(req, res);
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   await connectDB();
 
   switch (req.method) {
-    case "GET":
+    case 'GET':
       try {
         const sessions = await PomodoroSession.find({
           userId: authUser._id,
@@ -21,29 +21,17 @@ export default async function handler(req, res) {
       } catch (error) {
         console.error(error);
         return res.status(500).json({
-          error: "Failed to fetch pomodoro sessions",
+          error: 'Failed to fetch pomodoro sessions',
         });
       }
 
-    case "POST":
+    case 'POST':
       try {
-        const {
-          taskId,
-          startTime,
-          endTime,
-          durationMinutes,
-          type,
-          completed,
-        } = req.body;
+        const { taskId, startTime, endTime, durationMinutes, type, completed } = req.body;
 
-        if (
-          !startTime ||
-          !endTime ||
-          durationMinutes === undefined ||
-          !type
-        ) {
+        if (!startTime || !endTime || durationMinutes === undefined || !type) {
           return res.status(400).json({
-            error: "Missing required fields",
+            error: 'Missing required fields',
           });
         }
 
@@ -65,7 +53,7 @@ export default async function handler(req, res) {
       }
 
     default:
-      res.setHeader("Allow", ["GET", "POST"]);
+      res.setHeader('Allow', ['GET', 'POST']);
       return res.status(405).json({
         error: `Method ${req.method} Not Allowed`,
       });

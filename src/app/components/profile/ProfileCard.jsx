@@ -15,9 +15,7 @@ export default function ProfileCard({ user, profile }) {
     setAvatarError(false);
   }
 
-  const memberSince = new Date(
-    profile?.createdAt || user?.metadata?.creationTime || fallbackDate
-  );
+  const memberSince = new Date(profile?.createdAt || user?.metadata?.creationTime || fallbackDate);
   const formattedDate = memberSince.toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric',

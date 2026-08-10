@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 const AuthContext = createContext();
 
@@ -20,16 +20,16 @@ export function AuthProvider({ children }) {
         setUser(auth.currentUser);
 
         // Sync fresh credentials (including updated email) to MongoDB
-        fetch("/api/users/sync", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        fetch('/api/users/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             firebaseUid: user.uid,
             email: user.email,
-            displayName: user.displayName || "",
-            photoURL: user.photoURL || "",
+            displayName: user.displayName || '',
+            photoURL: user.photoURL || '',
           }),
-        }).catch((err) => console.error("Auto-sync failed:", err));
+        }).catch((err) => console.error('Auto-sync failed:', err));
       } else {
         setUser(null);
       }
@@ -53,7 +53,7 @@ export function AuthProvider({ children }) {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error('Error logging out:', error);
     }
   };
 

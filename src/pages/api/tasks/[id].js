@@ -1,13 +1,13 @@
-import { connectDB } from "@/lib/mongodb";
-import Task from "@/models/Task";
-import Course from "@/models/Course";
-import { verifyAuth } from "@utils/verifyAuth";
+import { connectDB } from '@/lib/mongodb';
+import Task from '@/models/Task';
+import Course from '@/models/Course';
+import { verifyAuth } from '@utils/verifyAuth';
 
 export default async function handler(req, res) {
   // Authenticate user
   const auth = await verifyAuth(req, res);
   if (!auth) {
-    return res.headersSent ? null : res.status(401).json({ error: "Unauthorized" });
+    return res.headersSent ? null : res.status(401).json({ error: 'Unauthorized' });
   }
 
   const { authUser } = auth;
@@ -17,20 +17,20 @@ export default async function handler(req, res) {
   const { id } = req.query;
 
   // GET: Fetch single task with strict ownership scoping
-  if (req.method === "GET") {
+  if (req.method === 'GET') {
     try {
       const task = await Task.findOne({ _id: id, userId: authUser._id });
       if (!task) {
-        return res.status(404).json({ message: "Task not found" });
+        return res.status(404).json({ message: 'Task not found' });
       }
       return res.status(200).json({ task });
     } catch (error) {
-      return res.status(500).json({ error: "Failed to fetch task" });
+      return res.status(500).json({ error: 'Failed to fetch task' });
     }
   }
 
   // PUT / PATCH: Update task with field whitelist and cross-resource ownership check
-  if (req.method === "PUT" || req.method === "PATCH") {
+  if (req.method === 'PUT' || req.method === 'PATCH') {
     try {
       const { title, description, priority, status, dueDate, courseId } = req.body;
 
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       if (courseId) {
         const course = await Course.findOne({ _id: courseId, userId: authUser._id });
         if (!course) {
-          return res.status(400).json({ error: "Invalid course assignment" });
+          return res.status(400).json({ error: 'Invalid course assignment' });
         }
       }
 
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
       if (status !== undefined) {
         updateData.status = status;
         // Automatically set or clear completedAt timestamp
-        updateData.completedAt = status === "completed" ? new Date() : null;
+        updateData.completedAt = status === 'completed' ? new Date() : null;
       }
       if (dueDate !== undefined) updateData.dueDate = dueDate;
       if (courseId !== undefined) updateData.courseId = courseId;
@@ -57,11 +57,11 @@ export default async function handler(req, res) {
       const updatedTask = await Task.findOneAndUpdate(
         { _id: id, userId: authUser._id },
         { $set: updateData },
-        { new: true, runValidators: true }
-      ).populate("courseId", "courseCode");
+        { new: true, runValidators: true },
+      ).populate('courseId', 'courseCode');
 
       if (!updatedTask) {
-        return res.status(404).json({ message: "Task not found or unauthorized" });
+        return res.status(404).json({ message: 'Task not found or unauthorized' });
       }
 
       return res.status(200).json({ task: updatedTask });
@@ -71,20 +71,20 @@ export default async function handler(req, res) {
   }
 
   // DELETE: Delete task with strict ownership check
-  if (req.method === "DELETE") {
+  if (req.method === 'DELETE') {
     try {
       const deletedTask = await Task.findOneAndDelete({ _id: id, userId: authUser._id });
 
       if (!deletedTask) {
-        return res.status(404).json({ message: "Task not found or unauthorized" });
+        return res.status(404).json({ message: 'Task not found or unauthorized' });
       }
 
       return res.status(204).end();
     } catch (error) {
-      return res.status(500).json({ error: "Failed to delete task" });
+      return res.status(500).json({ error: 'Failed to delete task' });
     }
   }
 
-  res.setHeader("Allow", ["GET", "PUT", "PATCH", "DELETE"]);
+  res.setHeader('Allow', ['GET', 'PUT', 'PATCH', 'DELETE']);
   return res.status(405).json({ message: `Method ${req.method} not allowed` });
 }

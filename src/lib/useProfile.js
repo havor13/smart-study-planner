@@ -57,7 +57,7 @@ export function useProfile() {
       setProfile(data.profile);
       return data.profile;
     },
-    [user]
+    [user],
   );
 
   const refetch = useCallback(() => {

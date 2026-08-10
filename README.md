@@ -42,21 +42,25 @@ Smart Study Planner helps students organize study schedules, assignments, and de
 ## 🚀 Getting Started
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/your-username/smart-study-planner.git
    ```
 
 2. Navigate into the project:
+
 ```bash
 cd smart-study-planner
 ```
 
 3. Install dependencies:
+
 ```bash
 npm install
 ```
 
 4. Start development server:
+
 ```bash
 npm run dev
 ```

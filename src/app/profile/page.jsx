@@ -35,7 +35,9 @@ export default function ProfilePage() {
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-          <span className="bg-linear-to-r from-blue-500 to-indigo-600 text-white p-2 rounded-xl">👤</span>
+          <span className="bg-linear-to-r from-blue-500 to-indigo-600 text-white p-2 rounded-xl">
+            👤
+          </span>
           My Profile
         </h1>
         <p className="text-gray-500 mt-1 ml-12">View and manage your account information</p>

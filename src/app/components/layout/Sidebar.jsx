@@ -31,9 +31,7 @@ const Sidebar = () => {
     { id: 'timer', label: 'Timer', icon: Timer, href: '/timer' },
   ];
 
-  const accountItems = [
-    { id: 'profile', label: 'Profile', icon: User, href: '/profile' },
-  ];
+  const accountItems = [{ id: 'profile', label: 'Profile', icon: User, href: '/profile' }];
 
   // Only used to keep the collapsed (icon-only) look off mobile screens.
   // The drawer itself is positioned with pure CSS below, so it never
@@ -192,9 +190,7 @@ const Sidebar = () => {
             </p>
           )}
 
-          <div className="space-y-1">
-            {menuItems.map(renderNavLink)}
-          </div>
+          <div className="space-y-1">{menuItems.map(renderNavLink)}</div>
         </nav>
 
         {/* Bottom - ACCOUNT section (Profile + Logout) */}

@@ -76,7 +76,11 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password,
+      );
 
       // Ensure sync completes before pushing to home page
       await syncUserToMongoDB(userCredential.user);
@@ -105,7 +109,7 @@ export default function LoginPage() {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
-        formData.password
+        formData.password,
       );
 
       await updateProfile(userCredential.user, {
@@ -139,12 +143,7 @@ export default function LoginPage() {
           onClick={toggleView}
         />
 
-        <AuthForm
-          type="signup"
-          active={isSignup}
-          title="Create Account"
-          onSubmit={handleSignUp}
-        >
+        <AuthForm type="signup" active={isSignup} title="Create Account" onSubmit={handleSignUp}>
           <input
             type="text"
             placeholder="Full Name"
@@ -192,12 +191,7 @@ export default function LoginPage() {
           onClick={toggleView}
         />
 
-        <AuthForm
-          type="signin"
-          active={!isSignup}
-          title="Sign In"
-          onSubmit={handleSignIn}
-        >
+        <AuthForm type="signin" active={!isSignup} title="Sign In" onSubmit={handleSignIn}>
           <input
             type="email"
             placeholder="Email"

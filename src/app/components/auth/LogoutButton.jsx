@@ -20,8 +20,8 @@ const LogoutButton = ({
 
   const handleLogout = async (e) => {
     // Prevent triggering parent container onClick handlers
-    e.stopPropagation(); 
-    
+    e.stopPropagation();
+
     if (onClick) {
       onClick(e);
     }
@@ -35,20 +35,12 @@ const LogoutButton = ({
   };
 
   return (
-    <button
-      onClick={handleLogout}
-      className={className}
-      title={title}
-      type="button"
-    >
+    <button onClick={handleLogout} className={className} title={title} type="button">
       {children ? (
         children
       ) : (
         <>
-          <LogOut
-            size={iconSize}
-            className={iconClassName}
-          />
+          <LogOut size={iconSize} className={iconClassName} />
           {showLabel && <span>{label}</span>}
         </>
       )}

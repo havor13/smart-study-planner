@@ -25,7 +25,7 @@ export function validatePriority(priority) {
 
 // Validate status (allowed values)
 export function validateStatus(status) {
-  const allowed = ["pending", "in-progress", "completed"];
+  const allowed = ['pending', 'in-progress', 'completed'];
   return allowed.includes(status);
 }
 

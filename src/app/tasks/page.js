@@ -16,12 +16,12 @@ export default function TasksPage() {
   // Helper to get a fresh Firebase ID Token dynamically (no localStorage required)
   const getAuthHeaders = useCallback(async () => {
     const user = auth.currentUser;
-    if (!user) throw new Error("No authenticated Firebase user found");
+    if (!user) throw new Error('No authenticated Firebase user found');
 
     const token = await user.getIdToken(); // Get fresh ID Token from Firebase SDK
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     };
   }, []);
 
@@ -46,16 +46,16 @@ export default function TasksPage() {
   const fetchCourses = useCallback(async () => {
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch("/api/courses", { headers });
+      const res = await fetch('/api/courses', { headers });
 
       if (!res.ok) {
-        throw new Error("Failed to fetch courses");
+        throw new Error('Failed to fetch courses');
       }
 
       const data = await res.json();
       setCourses(data);
     } catch (error) {
-      console.error("Fetch courses error:", error);
+      console.error('Fetch courses error:', error);
     }
   }, [getAuthHeaders]);
 
@@ -63,10 +63,7 @@ export default function TasksPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        await Promise.all([
-          fetchTasks(),
-          fetchCourses(),
-        ]);
+        await Promise.all([fetchTasks(), fetchCourses()]);
       }
       setLoading(false);
     });
@@ -78,18 +75,15 @@ export default function TasksPage() {
     try {
       const headers = await getAuthHeaders();
 
-      const normalizedCode = taskData.course
-        .toUpperCase()
-        .replace(/\s+/g, "");
+      const normalizedCode = taskData.course.toUpperCase().replace(/\s+/g, '');
 
       let course = courses.find(
-        (c) =>
-          c.courseCode.toUpperCase().replace(/\s+/g, "") === normalizedCode
+        (c) => c.courseCode.toUpperCase().replace(/\s+/g, '') === normalizedCode,
       );
 
       if (!course) {
-        const courseRes = await fetch("/api/courses", {
-          method: "POST",
+        const courseRes = await fetch('/api/courses', {
+          method: 'POST',
           headers,
           body: JSON.stringify({
             courseCode: normalizedCode,
@@ -97,7 +91,7 @@ export default function TasksPage() {
         });
 
         if (!courseRes.ok) {
-          throw new Error("Failed to create course");
+          throw new Error('Failed to create course');
         }
 
         course = await courseRes.json();
@@ -112,13 +106,13 @@ export default function TasksPage() {
 
       delete payload.course;
 
-      const res = await fetch("/api/tasks", {
-        method: "POST",
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
         headers,
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to create task");
+      if (!res.ok) throw new Error('Failed to create task');
 
       const data = await res.json();
 
@@ -127,7 +121,7 @@ export default function TasksPage() {
       setTasks((prev) => [enrichedTask, ...prev]);
       setShowForm(false);
     } catch (error) {
-      console.error("Add task error:", error);
+      console.error('Add task error:', error);
     }
   };
 
@@ -136,18 +130,15 @@ export default function TasksPage() {
       const taskId = editingTask.id || editingTask._id;
       const headers = await getAuthHeaders();
 
-      const normalizedCode = taskData.course
-        .toUpperCase()
-        .replace(/\s+/g, "");
+      const normalizedCode = taskData.course.toUpperCase().replace(/\s+/g, '');
 
       let course = courses.find(
-        (c) =>
-          c.courseCode.toUpperCase().replace(/\s+/g, "") === normalizedCode
+        (c) => c.courseCode.toUpperCase().replace(/\s+/g, '') === normalizedCode,
       );
 
       if (!course) {
-        const courseRes = await fetch("/api/courses", {
-          method: "POST",
+        const courseRes = await fetch('/api/courses', {
+          method: 'POST',
           headers,
           body: JSON.stringify({
             courseCode: normalizedCode,
@@ -155,7 +146,7 @@ export default function TasksPage() {
         });
 
         if (!courseRes.ok) {
-          throw new Error("Failed to create course");
+          throw new Error('Failed to create course');
         }
 
         course = await courseRes.json();
@@ -171,27 +162,25 @@ export default function TasksPage() {
       delete payload.course;
 
       const res = await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
+        method: 'PATCH',
         headers,
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to update task");
+      if (!res.ok) throw new Error('Failed to update task');
 
       const data = await res.json();
 
       const enrichedTask = { ...data.task, courseId: course };
 
       setTasks((prev) =>
-        prev.map((task) =>
-          (task.id || task._id) === taskId ? enrichedTask : task
-        )
+        prev.map((task) => ((task.id || task._id) === taskId ? enrichedTask : task)),
       );
 
       setEditingTask(null);
       setShowForm(false);
     } catch (error) {
-      console.error("Edit task error:", error);
+      console.error('Edit task error:', error);
     }
   };
 
@@ -220,8 +209,8 @@ export default function TasksPage() {
 
       setTasks((prev) =>
         prev.map((task) =>
-          (task._id === id || task.id === id) ? { ...task, ...updatedTask } : task
-        )
+          task._id === id || task.id === id ? { ...task, ...updatedTask } : task,
+        ),
       );
     } catch (error) {
       console.error('Toggle task error:', error);
@@ -253,7 +242,7 @@ export default function TasksPage() {
   if (loading) {
     return <div className="p-4 text-gray-500">Loading tasks...</div>;
   }
-  
+
   return (
     <>
       <div className="flex justify-between items-center mb-6">

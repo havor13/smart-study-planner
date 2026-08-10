@@ -48,9 +48,7 @@ const ConfirmModal = ({
           </button>
         </div>
 
-        {message && (
-          <p className="text-sm text-gray-500 mb-6 leading-relaxed">{message}</p>
-        )}
+        {message && <p className="text-sm text-gray-500 mb-6 leading-relaxed">{message}</p>}
 
         <div className="flex gap-3">
           <button

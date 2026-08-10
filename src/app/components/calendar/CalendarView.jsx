@@ -65,8 +65,8 @@ const CalendarView = () => {
               end: dueDate,
               allDay: true,
               priority: task.priority, // Passed for custom eventPropGetter styling
-              status: task.status,     // Passed for completion line-through styling
-              task,                    // Full task so it can be viewed on click
+              status: task.status, // Passed for completion line-through styling
+              task, // Full task so it can be viewed on click
             };
           });
 
@@ -162,11 +162,7 @@ const CalendarView = () => {
 
       {/* View task details in the shared TaskForm modal */}
       {selectedTask && (
-        <TaskForm
-          task={selectedTask}
-          readOnly
-          onClose={() => setSelectedTask(null)}
-        />
+        <TaskForm task={selectedTask} readOnly onClose={() => setSelectedTask(null)} />
       )}
     </>
   );
