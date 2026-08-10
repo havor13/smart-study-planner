@@ -7,9 +7,6 @@ import mongoose from "mongoose";
 let isConnected = false;
 
 export async function connectDB() {
-  // Debug: show what env variable is actually set
-  console.log("🔧 DB_URL from env:", process.env.MONGODB_URI);
-
   // Check env variable exists
   if (!process.env.MONGODB_URI) {
     throw new Error("MONGODB_URI is not defined.");

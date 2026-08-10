@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 import connectDB from "./src/lib/mongodb.js";
 
 // Load environment variables
-dotenv.config({ path: ".env" });
+// Point to local for ease-of-use
+dotenv.config({ path: ".env.local" });
 
 // Define Schemas / Import Models
 const userSchema = new mongoose.Schema(
@@ -61,7 +62,7 @@ const Task = mongoose.models.Task || mongoose.model("Task", taskSchema);
 const PomodoroSession =
   mongoose.models.PomodoroSession || mongoose.model("PomodoroSession", pomodoroSessionSchema);
 
-const FIREBASE_UID = "osqd8oDU1kaEy2LZJs2ikB9Zecj2";
+const FIREBASE_UID = "FNMDmKvcMMXL0ZNEoG4lBIQKI6p1";
 
 async function seedDatabase() {
   try {
