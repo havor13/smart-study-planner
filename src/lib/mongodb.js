@@ -15,7 +15,7 @@ export async function connectDB() {
   // Any caller gets active connection object
   if (isConnected) {
     return mongoose.connections;
-  }
+  };
 
   try {
     // No need for useNewUrlParser or useUnifiedTopology in Mongoose v6+

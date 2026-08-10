@@ -13,7 +13,7 @@ export default async function handler(req, res) {
 
   // GET: Fetch only authenticated user's courses
   if (req.method === "GET") {
-    try{
+    try {
       const courses = await Course.find({ userId: authUser._id });
       return res.status(200).json(courses);
     } catch (error) {
@@ -52,6 +52,6 @@ export default async function handler(req, res) {
   }
 
   // Fallback for unsupported HTTP methods
-  res.setHeader("Allow", ["GET", "POST"]);
+  res.setHeader("Allow",["GET", "POST"]);
   return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
 }
