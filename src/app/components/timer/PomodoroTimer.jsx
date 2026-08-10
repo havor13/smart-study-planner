@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
 
@@ -17,7 +17,6 @@ const PomodoroTimer = () => {
   const [isActive, setIsActive] = useState(false);
   const [cycles, setCycles] = useState(0);
 
-  // Optional task linking & persistence state
   const [tasks, setTasks] = useState([]);
   const [selectedTaskId, setSelectedTaskId] = useState('');
   const [startTime, setStartTime] = useState(null);
@@ -25,18 +24,14 @@ const PomodoroTimer = () => {
   const timerRef = useRef(null);
   const audioCtxRef = useRef(null);
 
-  // Plays a short beep sequence using the Web Audio API — no sound file needed.
-  const playChime = () => {
+  const playChime = useCallback(() => {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
       const ctx = audioCtxRef.current;
-      // Browsers require the context to be resumed after a user gesture;
-      // since Start/Pause was already clicked earlier, this should be allowed.
       if (ctx.state === 'suspended') ctx.resume();
 
       const now = ctx.currentTime;
-      // Two quick beeps, second one a bit higher, like a gentle "ding-ding"
       [0, 0.22].forEach((offset, i) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -53,9 +48,8 @@ const PomodoroTimer = () => {
     } catch (err) {
       console.error('Unable to play completion sound:', err);
     }
-  };
+  }, []);
 
-  // Fetch user tasks so they can associate timer with a specific task
   useEffect(() => {
     const fetchTasks = async () => {
       if (!user) return;
@@ -79,52 +73,40 @@ const PomodoroTimer = () => {
     fetchTasks();
   }, [user]);
 
-  // Countdown loop — just decrements. Completion is handled by the effect below,
-  // not inside the updater, so it can't fire twice under StrictMode.
-  useEffect(() => {
-    if (isActive) {
-      if (!startTime) setStartTime(new Date());
+  const saveSessionToDB = useCallback(
+    async (sessionData) => {
+      if (!user) return;
+      try {
+        const token = await user.getIdToken();
+        await fetch('/api/pomodoro', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(sessionData),
+        });
+      } catch (error) {
+        console.error('Failed to log pomodoro session:', error);
+      }
+    },
+    [user]
+  );
 
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000);
-    } else {
-      clearInterval(timerRef.current);
-    }
+  const switchMode = useCallback((newMode) => {
+    setIsActive(false);
+    setStartTime(null);
+    setMode(newMode);
+    setTimeLeft(MODES[newMode].duration * 60);
+  }, []);
 
-    return () => clearInterval(timerRef.current);
-  }, [isActive]);
-
-  // Fires once when timeLeft actually reaches 0 while running
-  useEffect(() => {
-    if (isActive && timeLeft === 0) {
-      clearInterval(timerRef.current);
-      setIsActive(false);
-      playChime();
-      handleSessionComplete();
-    }
-  }, [timeLeft, isActive]);
-
-  const saveSessionToDB = async (sessionData) => {
-    if (!user) return;
-    try {
-      const token = await user.getIdToken();
-      await fetch('/api/pomodoro', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(sessionData),
-      });
-    } catch (error) {
-      console.error('Failed to log pomodoro session:', error);
-    }
-  };
-
-  const handleSessionComplete = async () => {
+  // Declared before the countdown effect so it can be referenced there
+  // without a use-before-define error, and memoized so it's a stable
+  // effect dependency.
+  const handleSessionComplete = useCallback(async () => {
     const sessionEndTime = new Date();
-    const sessionStartTime = startTime || new Date(sessionEndTime.getTime() - MODES[mode].duration * 60000);
+    const sessionStartTime =
+      startTime || new Date(sessionEndTime.getTime() - MODES[mode].duration * 60000);
 
     await saveSessionToDB({
       taskId: selectedTaskId || null,
@@ -144,7 +126,33 @@ const PomodoroTimer = () => {
     } else {
       switchMode('work');
     }
-  };
+  }, [startTime, mode, selectedTaskId, cycles, saveSessionToDB, switchMode]);
+
+  // Countdown loop. Completion (reaching 0) is now handled inside the
+  // setInterval callback itself — the tick is the external event, so
+  // setState calls here happen in response to it, not synchronously
+  // in the effect body.
+  useEffect(() => {
+    if (!isActive) {
+      clearInterval(timerRef.current);
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          setIsActive(false);
+          playChime();
+          handleSessionComplete();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerRef.current);
+  }, [isActive, playChime, handleSessionComplete]);
 
   const toggleTimer = () => {
     if (!isActive && !startTime) {
@@ -157,13 +165,6 @@ const PomodoroTimer = () => {
     setIsActive(false);
     setStartTime(null);
     setTimeLeft(MODES[mode].duration * 60);
-  };
-
-  const switchMode = (newMode) => {
-    setIsActive(false);
-    setStartTime(null);
-    setMode(newMode);
-    setTimeLeft(MODES[newMode].duration * 60);
   };
 
   const formatTime = (seconds) => {

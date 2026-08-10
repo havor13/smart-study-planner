@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import TaskForm from '../components/tasks/TaskForm';
@@ -14,7 +14,7 @@ export default function TasksPage() {
   const [courses, setCourses] = useState([]);
 
   // Helper to get a fresh Firebase ID Token dynamically (no localStorage required)
-  const getAuthHeaders = async () => {
+  const getAuthHeaders = useCallback(async () => {
     const user = auth.currentUser;
     if (!user) throw new Error("No authenticated Firebase user found");
 
@@ -23,24 +23,9 @@ export default function TasksPage() {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     };
-  };
-
-  // Wait for Firebase Auth state to resolve on initial load
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        await Promise.all([
-            fetchTasks(),
-            fetchCourses(),
-        ]);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
   }, []);
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       const headers = await getAuthHeaders();
       const res = await fetch('/api/tasks', { headers });
@@ -56,9 +41,9 @@ export default function TasksPage() {
     } catch (error) {
       console.error('Fetch tasks error:', error);
     }
-  };
+  }, [getAuthHeaders]);
 
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       const headers = await getAuthHeaders();
       const res = await fetch("/api/courses", { headers });
@@ -72,7 +57,22 @@ export default function TasksPage() {
     } catch (error) {
       console.error("Fetch courses error:", error);
     }
-  };
+  }, [getAuthHeaders]);
+
+  // Wait for Firebase Auth state to resolve on initial load
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await Promise.all([
+          fetchTasks(),
+          fetchCourses(),
+        ]);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [fetchTasks, fetchCourses]);
 
   const handleAddTask = async (taskData) => {
     try {
@@ -122,9 +122,6 @@ export default function TasksPage() {
 
       const data = await res.json();
 
-      // Normalize courseId to the populated shape ({ _id, courseCode, ... })
-      // so tasks in state always look the same, regardless of whether they
-      // came from a populated GET or an unpopulated POST/PATCH response.
       const enrichedTask = { ...data.task, courseId: course };
 
       setTasks((prev) => [enrichedTask, ...prev]);
@@ -183,7 +180,6 @@ export default function TasksPage() {
 
       const data = await res.json();
 
-      // Same normalization as handleAddTask — keep courseId shape consistent
       const enrichedTask = { ...data.task, courseId: course };
 
       setTasks((prev) =>
@@ -200,37 +196,37 @@ export default function TasksPage() {
   };
 
   const handleToggleTask = async (id, status) => {
-  if (!id) {
-    console.error('Toggle task error: Missing task ID');
-    return;
-  }
-
-  try {
-    const headers = await getAuthHeaders();
-    const res = await fetch(`/api/tasks/${id}`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ status }),
-    });
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      console.error(`[Toggle Task Error ${res.status}]:`, errData);
-      throw new Error(errData.error || errData.message || 'Failed to toggle task');
+    if (!id) {
+      console.error('Toggle task error: Missing task ID');
+      return;
     }
 
-    const data = await res.json();
-    const updatedTask = data.task || data;
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ status }),
+      });
 
-    setTasks((prev) =>
-      prev.map((task) =>
-        (task._id === id || task.id === id) ? { ...task, ...updatedTask } : task
-      )
-    );
-  } catch (error) {
-    console.error('Toggle task error:', error);
-  }
-};
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        console.error(`[Toggle Task Error ${res.status}]:`, errData);
+        throw new Error(errData.error || errData.message || 'Failed to toggle task');
+      }
+
+      const data = await res.json();
+      const updatedTask = data.task || data;
+
+      setTasks((prev) =>
+        prev.map((task) =>
+          (task._id === id || task.id === id) ? { ...task, ...updatedTask } : task
+        )
+      );
+    } catch (error) {
+      console.error('Toggle task error:', error);
+    }
+  };
 
   const handleDeleteTask = async (id) => {
     // Confirmation is handled by the ConfirmModal in TaskItem
@@ -257,7 +253,7 @@ export default function TasksPage() {
   if (loading) {
     return <div className="p-4 text-gray-500">Loading tasks...</div>;
   }
-
+  
   return (
     <>
       <div className="flex justify-between items-center mb-6">
