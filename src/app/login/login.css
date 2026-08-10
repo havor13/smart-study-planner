@@ -287,88 +287,96 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .login-card {
-    height: 650px;
-    flex-direction: column;
-    border-radius: 16px;
+  .login-page {
+    padding: 12px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    align-items: stretch;
   }
 
+  .login-card {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: calc(100vh - 24px);
+    min-height: calc(100dvh - 24px);
+    flex-direction: column;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(37, 99, 235, 0.18);
+  }
+
+  /* The sliding gradient panel is replaced by the hero's own background */
   .card-bg {
-    border-radius: 16px;
+    display: none;
+  }
+
+  /* Inactive panels must not reserve space in the column layout */
+  .hero:not(.active),
+  .form:not(.active) {
+    display: none;
   }
 
   .hero,
   .form {
     width: 100%;
-    padding: 30px 25px;
     position: relative;
-    top: auto;
+    top: auto !important;
+    bottom: auto !important;
+    left: 0;
+    right: 0;
     transform: none !important;
+    transition: opacity 0.3s ease;
   }
 
+  /* Hero: blue gradient panel on top in both modes */
   .hero {
-    height: 35%;
+    order: 1;
+    min-height: 260px;
+    padding: 40px 24px 56px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
+    background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 50%, #93bbfc 100%);
   }
 
+  /* Form: white sheet overlapping the hero's bottom edge */
   .form {
-    height: 65%;
-    padding: 25px;
-    overflow-y: auto;
+    order: 2;
+    flex: 1;
+    padding: 36px 24px 30px;
+    margin-top: -24px;
+    border-radius: 20px 20px 0 0 !important;
+    background: #ffffff !important;
+    box-shadow: 0 -8px 30px rgba(37, 99, 235, 0.08);
   }
 
-  .hero.signup {
-    top: 0;
-    left: 0;
-    transform: none !important;
-  }
-
-  .hero.signin {
-    bottom: 0;
-    left: 0;
-    top: auto;
-    transform: none !important;
-  }
-
-  .form.signup {
-    bottom: 0;
-    left: 0;
-    top: auto;
-    transform: none !important;
-    border-radius: 16px 16px 0 0 !important;
-  }
-
-  .form.signin {
-    top: 0;
-    left: 0;
-    transform: none !important;
-    border-radius: 16px 16px 0 0 !important;
-  }
-
-  .form.signin.active,
-  .form.signup.active {
-    border-radius: 16px 16px 0 0 !important;
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  }
-
-  .card-bg {
-    display: none;
-  }
-
+  /* White text + outline button on the blue hero (both modes) */
   .hero.signup h2,
-  .hero.signup p {
+  .hero.signup p,
+  .hero.signin h2,
+  .hero.signin p {
     color: #ffffff !important;
   }
 
-  .hero.signin h2 {
-    color: #1e40af !important;
+  .hero.signup button,
+  .hero.signin button {
+    border-color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
   }
 
-  .hero.signin p {
-    color: #2563eb !important;
+  .form h2 {
+    font-size: 24px;
+  }
+
+  .form input {
+    padding: 13px 16px;
+    font-size: 15px;
+  }
+
+  .form button {
+    padding: 15px;
   }
 }
