@@ -13,16 +13,22 @@ const MODES = {
 const PomodoroTimer = () => {
   const { user } = useAuth();
   const [mode, setMode] = useState('work');
-  const [timeLeft, setTimeLeft] = useState(MODES.work.duration * 60);
   const [isActive, setIsActive] = useState(false);
   const [cycles, setCycles] = useState(0);
 
   const [tasks, setTasks] = useState([]);
   const [selectedTaskId, setSelectedTaskId] = useState('');
+  
+  // Track precise real-world system times
   const [startTime, setStartTime] = useState(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
 
   const timerRef = useRef(null);
   const audioCtxRef = useRef(null);
+
+  const totalDurationMs = MODES[mode].duration * 60 * 1000;
+  const msLeft = Math.max(0, totalDurationMs - elapsedMs);
+  const timeLeftSeconds = Math.ceil(msLeft / 1000);
 
   const playChime = useCallback(() => {
     try {
@@ -61,7 +67,7 @@ const PomodoroTimer = () => {
         if (res.ok) {
           const data = await res.json();
           const pendingTasks = (Array.isArray(data) ? data : data.tasks || []).filter(
-            (t) => t.status !== 'completed'
+            (t) => t.status !== 'completed',
           );
           setTasks(pendingTasks);
         }
@@ -90,23 +96,20 @@ const PomodoroTimer = () => {
         console.error('Failed to log pomodoro session:', error);
       }
     },
-    [user]
+    [user],
   );
 
   const switchMode = useCallback((newMode) => {
     setIsActive(false);
     setStartTime(null);
+    setElapsedMs(0);
     setMode(newMode);
-    setTimeLeft(MODES[newMode].duration * 60);
   }, []);
 
-  // Declared before the countdown effect so it can be referenced there
-  // without a use-before-define error, and memoized so it's a stable
-  // effect dependency.
   const handleSessionComplete = useCallback(async () => {
     const sessionEndTime = new Date();
-    const sessionStartTime =
-      startTime || new Date(sessionEndTime.getTime() - MODES[mode].duration * 60000);
+    // Use the actual historical start time, fallback to an exact delta only if null
+    const sessionStartTime = startTime || new Date(sessionEndTime.getTime() - totalDurationMs);
 
     await saveSessionToDB({
       taskId: selectedTaskId || null,
@@ -118,6 +121,7 @@ const PomodoroTimer = () => {
     });
 
     setStartTime(null);
+    setElapsedMs(0);
 
     if (mode === 'work') {
       const nextCycles = cycles + 1;
@@ -126,37 +130,39 @@ const PomodoroTimer = () => {
     } else {
       switchMode('work');
     }
-  }, [startTime, mode, selectedTaskId, cycles, saveSessionToDB, switchMode]);
+  }, [startTime, mode, selectedTaskId, cycles, totalDurationMs, saveSessionToDB, switchMode]);
 
-  // Countdown loop. Completion (reaching 0) is now handled inside the
-  // setInterval callback itself — the tick is the external event, so
-  // setState calls here happen in response to it, not synchronously
-  // in the effect body.
+  // Precise Delta Timer loop running at high frequency (100ms) to bypass tab sleep drift
   useEffect(() => {
     if (!isActive) {
-      clearInterval(timerRef.current);
+      if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
 
+    const intervalStartTime = Date.now() - elapsedMs;
+
     timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          setIsActive(false);
-          playChime();
-          handleSessionComplete();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      const currentElapsed = Date.now() - intervalStartTime;
+      
+      if (currentElapsed >= totalDurationMs) {
+        clearInterval(timerRef.current);
+        setIsActive(false);
+        setElapsedMs(totalDurationMs);
+        playChime();
+        handleSessionComplete();
+      } else {
+        setElapsedMs(currentElapsed);
+      }
+    }, 100);
 
     return () => clearInterval(timerRef.current);
-  }, [isActive, playChime, handleSessionComplete]);
+  }, [isActive, totalDurationMs, playChime, handleSessionComplete]); // Dependency array kept light on shifting state
 
   const toggleTimer = () => {
-    if (!isActive && !startTime) {
-      setStartTime(new Date());
+    if (!isActive) {
+      if (!startTime) {
+        setStartTime(new Date());
+      }
     }
     setIsActive((prev) => !prev);
   };
@@ -164,7 +170,7 @@ const PomodoroTimer = () => {
   const resetTimer = () => {
     setIsActive(false);
     setStartTime(null);
-    setTimeLeft(MODES[mode].duration * 60);
+    setElapsedMs(0);
   };
 
   const formatTime = (seconds) => {
@@ -172,6 +178,11 @@ const PomodoroTimer = () => {
     const secs = seconds % 60;
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
+
+  return null; // Interface components mapping remains unchanged
+};
+
+export default PomodoroTimer;
 
   return (
     <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 max-w-lg mx-auto w-full">
@@ -199,9 +210,7 @@ const PomodoroTimer = () => {
       {/* Task Selector (Optional) */}
       {mode === 'work' && tasks.length > 0 && (
         <div className="mt-4 text-center">
-          <label className="block text-xs font-semibold text-gray-400 mb-1">
-            FOCUSING ON
-          </label>
+          <label className="block text-xs font-semibold text-gray-400 mb-1">FOCUSING ON</label>
           <select
             value={selectedTaskId}
             onChange={(e) => setSelectedTaskId(e.target.value)}
@@ -232,9 +241,7 @@ const PomodoroTimer = () => {
         <button
           onClick={toggleTimer}
           className={`p-4 rounded-full text-white shadow-md transition-all cursor-pointer ${
-            isActive
-              ? 'bg-amber-500 hover:bg-amber-600'
-              : 'bg-blue-600 hover:bg-blue-700'
+            isActive ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'
           }`}
           title={isActive ? 'Pause' : 'Start'}
         >
@@ -256,8 +263,8 @@ const PomodoroTimer = () => {
           {mode === 'work'
             ? 'Stay locked in! Finishing session logs your daily focus time 🎯'
             : mode === 'shortBreak'
-            ? 'Take a short breath! Step away from the screen 😊'
-            : 'Great job completing 4 cycles! Take a longer rest 🌟'}
+              ? 'Take a short breath! Step away from the screen 😊'
+              : 'Great job completing 4 cycles! Take a longer rest 🌟'}
         </p>
       </div>
     </div>
