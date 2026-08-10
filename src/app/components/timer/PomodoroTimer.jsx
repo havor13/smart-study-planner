@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Pause, RotateCcw } from 'lucide-react';
-import { useAuth } from '@/app/context/AuthContext';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Play, Pause, RotateCcw } from "lucide-react";
+import { useAuth } from "@/app/context/AuthContext";
 
 const MODES = {
-  work: { label: 'Study Session', duration: 25, emoji: '📚', type: 'focus' },
-  shortBreak: { label: 'Short Break', duration: 5, emoji: '☕', type: 'short_break' },
-  longBreak: { label: 'Long Break', duration: 15, emoji: '🌿', type: 'long_break' },
+  work: { label: "Study Session", duration: 25, emoji: "📚", type: "focus" },
+  shortBreak: { label: "Short Break", duration: 5, emoji: "☕", type: "short_break" },
+  longBreak: { label: "Long Break", duration: 15, emoji: "🌿", type: "long_break" },
 };
 
 const PomodoroTimer = () => {
   const { user } = useAuth();
-  const [mode, setMode] = useState('work');
+  const [mode, setMode] = useState("work");
   const [isActive, setIsActive] = useState(false);
   const [cycles, setCycles] = useState(0);
 
   const [tasks, setTasks] = useState([]);
-  const [selectedTaskId, setSelectedTaskId] = useState('');
-  
+  const [selectedTaskId, setSelectedTaskId] = useState("");
+
   // Track precise real-world system times
   const [startTime, setStartTime] = useState(null);
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -35,13 +35,13 @@ const PomodoroTimer = () => {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
       const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
+      if (ctx.state === "suspended") ctx.resume();
 
       const now = ctx.currentTime;
       [0, 0.22].forEach((offset, i) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'sine';
+        osc.type = "sine";
         osc.frequency.value = i === 0 ? 880 : 1046.5;
         gain.gain.setValueAtTime(0, now + offset);
         gain.gain.linearRampToValueAtTime(0.3, now + offset + 0.02);
@@ -52,7 +52,7 @@ const PomodoroTimer = () => {
         osc.stop(now + offset + 0.22);
       });
     } catch (err) {
-      console.error('Unable to play completion sound:', err);
+      console.error("Unable to play completion sound:", err);
     }
   }, []);
 
@@ -61,18 +61,18 @@ const PomodoroTimer = () => {
       if (!user) return;
       try {
         const token = await user.getIdToken();
-        const res = await fetch('/api/tasks', {
+        const res = await fetch("/api/tasks", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
           const data = await res.json();
           const pendingTasks = (Array.isArray(data) ? data : data.tasks || []).filter(
-            (t) => t.status !== 'completed',
+            (t) => t.status !== "completed",
           );
           setTasks(pendingTasks);
         }
       } catch (err) {
-        console.error('Failed to fetch tasks for Pomodoro:', err);
+        console.error("Failed to fetch tasks for Pomodoro:", err);
       }
     };
 
@@ -84,16 +84,16 @@ const PomodoroTimer = () => {
       if (!user) return;
       try {
         const token = await user.getIdToken();
-        await fetch('/api/pomodoro', {
-          method: 'POST',
+        await fetch("/api/pomodoro", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(sessionData),
         });
       } catch (error) {
-        console.error('Failed to log pomodoro session:', error);
+        console.error("Failed to log pomodoro session:", error);
       }
     },
     [user],
@@ -123,12 +123,12 @@ const PomodoroTimer = () => {
     setStartTime(null);
     setElapsedMs(0);
 
-    if (mode === 'work') {
+    if (mode === "work") {
       const nextCycles = cycles + 1;
       setCycles(nextCycles);
-      switchMode(nextCycles % 4 === 0 ? 'longBreak' : 'shortBreak');
+      switchMode(nextCycles % 4 === 0 ? "longBreak" : "shortBreak");
     } else {
-      switchMode('work');
+      switchMode("work");
     }
   }, [startTime, mode, selectedTaskId, cycles, totalDurationMs, saveSessionToDB, switchMode]);
 
@@ -143,7 +143,7 @@ const PomodoroTimer = () => {
 
     timerRef.current = setInterval(() => {
       const currentElapsed = Date.now() - intervalStartTime;
-      
+
       if (currentElapsed >= totalDurationMs) {
         clearInterval(timerRef.current);
         setIsActive(false);
@@ -176,13 +176,8 @@ const PomodoroTimer = () => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
-
-  return null; // Interface components mapping remains unchanged
-};
-
-export default PomodoroTimer;
 
   return (
     <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 max-w-lg mx-auto w-full">
@@ -194,8 +189,8 @@ export default PomodoroTimer;
             onClick={() => switchMode(key)}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
               mode === key
-                ? 'bg-white text-gray-800 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? "bg-white text-gray-800 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             {MODES[key].emoji} {MODES[key].label}
@@ -208,7 +203,7 @@ export default PomodoroTimer;
       </div>
 
       {/* Task Selector (Optional) */}
-      {mode === 'work' && tasks.length > 0 && (
+      {mode === "work" && tasks.length > 0 && (
         <div className="mt-4 text-center">
           <label className="block text-xs font-semibold text-gray-400 mb-1">FOCUSING ON</label>
           <select
@@ -229,7 +224,7 @@ export default PomodoroTimer;
       {/* Digital Timer Display — no SVG, no absolute positioning */}
       <div className="my-10 text-center">
         <div className="text-6xl font-bold tracking-tight tabular-nums text-gray-800">
-          {formatTime(timeLeft)}
+          {formatTime(timeLeftSeconds)}
         </div>
         <div className="text-xs text-gray-400 mt-2 uppercase tracking-wider font-semibold">
           {MODES[mode].label}
@@ -241,9 +236,9 @@ export default PomodoroTimer;
         <button
           onClick={toggleTimer}
           className={`p-4 rounded-full text-white shadow-md transition-all cursor-pointer ${
-            isActive ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'
+            isActive ? "bg-amber-500 hover:bg-amber-600" : "bg-blue-600 hover:bg-blue-700"
           }`}
-          title={isActive ? 'Pause' : 'Start'}
+          title={isActive ? "Pause" : "Start"}
         >
           {isActive ? <Pause size={24} /> : <Play size={24} className="ml-0.5" />}
         </button>
@@ -260,11 +255,11 @@ export default PomodoroTimer;
       {/* Motivational Subtext */}
       <div className="mt-6 p-3 bg-gray-50 rounded-lg text-center border border-gray-100">
         <p className="text-xs text-gray-600 font-medium">
-          {mode === 'work'
-            ? 'Stay locked in! Finishing session logs your daily focus time 🎯'
-            : mode === 'shortBreak'
-              ? 'Take a short breath! Step away from the screen 😊'
-              : 'Great job completing 4 cycles! Take a longer rest 🌟'}
+          {mode === "work"
+            ? "Stay locked in! Finishing session logs your daily focus time 🎯"
+            : mode === "shortBreak"
+              ? "Take a short breath! Step away from the screen 😊"
+              : "Great job completing 4 cycles! Take a longer rest 🌟"}
         </p>
       </div>
     </div>
