@@ -6,8 +6,18 @@ import { useAuth } from "@/app/context/AuthContext";
 
 const MODES = {
   work: { label: "Study Session", duration: 25, emoji: "📚", type: "focus" },
-  shortBreak: { label: "Short Break", duration: 5, emoji: "☕", type: "short_break" },
-  longBreak: { label: "Long Break", duration: 15, emoji: "🌿", type: "long_break" },
+  shortBreak: {
+    label: "Short Break",
+    duration: 5,
+    emoji: "☕",
+    type: "short_break",
+  },
+  longBreak: {
+    label: "Long Break",
+    duration: 15,
+    emoji: "🌿",
+    type: "long_break",
+  },
 };
 
 const PomodoroTimer = () => {
@@ -66,9 +76,9 @@ const PomodoroTimer = () => {
         });
         if (res.ok) {
           const data = await res.json();
-          const pendingTasks = (Array.isArray(data) ? data : data.tasks || []).filter(
-            (t) => t.status !== "completed",
-          );
+          const pendingTasks = (
+            Array.isArray(data) ? data : data.tasks || []
+          ).filter((t) => t.status !== "completed");
           setTasks(pendingTasks);
         }
       } catch (err) {
@@ -77,6 +87,37 @@ const PomodoroTimer = () => {
     };
 
     fetchTasks();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchTodayCycles = async () => {
+      if (!user) return;
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch("/api/pomodoro", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const sessions = await res.json();
+
+          const startOfToday = new Date();
+          startOfToday.setHours(0, 0, 0, 0);
+
+          const todaysFocusSessions = sessions.filter(
+            (s) =>
+              s.type === "focus" &&
+              s.completed &&
+              new Date(s.startTime) >= startOfToday,
+          );
+
+          setCycles(todaysFocusSessions.length);
+        }
+      } catch (err) {
+        console.error("Failed to fetch pomodoro history:", err);
+      }
+    };
+
+    fetchTodayCycles();
   }, [user]);
 
   const saveSessionToDB = useCallback(
@@ -109,7 +150,8 @@ const PomodoroTimer = () => {
   const handleSessionComplete = useCallback(async () => {
     const sessionEndTime = new Date();
     // Use the actual historical start time, fallback to an exact delta only if null
-    const sessionStartTime = startTime || new Date(sessionEndTime.getTime() - totalDurationMs);
+    const sessionStartTime =
+      startTime || new Date(sessionEndTime.getTime() - totalDurationMs);
 
     await saveSessionToDB({
       taskId: selectedTaskId || null,
@@ -130,7 +172,15 @@ const PomodoroTimer = () => {
     } else {
       switchMode("work");
     }
-  }, [startTime, mode, selectedTaskId, cycles, totalDurationMs, saveSessionToDB, switchMode]);
+  }, [
+    startTime,
+    mode,
+    selectedTaskId,
+    cycles,
+    totalDurationMs,
+    saveSessionToDB,
+    switchMode,
+  ]);
 
   // Precise Delta Timer loop running at high frequency (100ms) to bypass tab sleep drift
   useEffect(() => {
@@ -199,13 +249,17 @@ const PomodoroTimer = () => {
       </div>
 
       <div className="text-center">
-        <p className="text-sm font-medium text-gray-500">Cycles Completed: {cycles}</p>
+        <p className="text-sm font-medium text-gray-500">
+          Cycles Completed: {cycles}
+        </p>
       </div>
 
       {/* Task Selector (Optional) */}
       {mode === "work" && tasks.length > 0 && (
         <div className="mt-4 text-center">
-          <label className="block text-xs font-semibold text-gray-400 mb-1">FOCUSING ON</label>
+          <label className="block text-xs font-semibold text-gray-400 mb-1">
+            FOCUSING ON
+          </label>
           <select
             value={selectedTaskId}
             onChange={(e) => setSelectedTaskId(e.target.value)}
@@ -236,11 +290,17 @@ const PomodoroTimer = () => {
         <button
           onClick={toggleTimer}
           className={`p-4 rounded-full text-white shadow-md transition-all cursor-pointer ${
-            isActive ? "bg-amber-500 hover:bg-amber-600" : "bg-blue-600 hover:bg-blue-700"
+            isActive
+              ? "bg-amber-500 hover:bg-amber-600"
+              : "bg-blue-600 hover:bg-blue-700"
           }`}
           title={isActive ? "Pause" : "Start"}
         >
-          {isActive ? <Pause size={24} /> : <Play size={24} className="ml-0.5" />}
+          {isActive ? (
+            <Pause size={24} />
+          ) : (
+            <Play size={24} className="ml-0.5" />
+          )}
         </button>
 
         <button
@@ -259,7 +319,11 @@ const PomodoroTimer = () => {
             ? "Stay locked in! Finishing session logs your daily focus time 🎯"
             : mode === "shortBreak"
               ? "Take a short breath! Step away from the screen 😊"
-              : "Great job completing 4 cycles! Take a longer rest 🌟"}
+              : cycles < 4
+                ? `Only ${cycles} cycle${cycles === 1 ? "" : "s"} in — keep going, you've got this! 💪`
+                : cycles % 4 === 0
+                  ? "Great job completing 4 cycles! Take a longer rest 🌟"
+                  : `You've completed ${cycles} cycles! 🌟`}
         </p>
       </div>
     </div>
