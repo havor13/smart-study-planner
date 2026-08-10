@@ -8,29 +8,37 @@ export function useProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const fetchProfile = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch('/api/users/profile', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to load profile');
-      const data = await res.json();
-      setProfile(data.profile);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+  const [refetchIndex, setRefetchIndex] = useState(0);
 
   useEffect(() => {
+    if (!user) return;
+
+    let ignore = false;
+
+    const fetchProfile = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch('/api/users/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Failed to load profile');
+        const data = await res.json();
+        if (!ignore) setProfile(data.profile);
+      } catch (err) {
+        if (!ignore) setError(err.message);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+
     fetchProfile();
-  }, [fetchProfile]);
+
+    return () => {
+      ignore = true;
+    };
+  }, [user, refetchIndex]);
 
   const updateProfile = useCallback(
     async (updates) => {
@@ -52,5 +60,9 @@ export function useProfile() {
     [user]
   );
 
-  return { profile, loading, error, updateProfile, refetch: fetchProfile };
+  const refetch = useCallback(() => {
+    setRefetchIndex((i) => i + 1);
+  }, []);
+
+  return { profile, loading, error, updateProfile, refetch };
 }

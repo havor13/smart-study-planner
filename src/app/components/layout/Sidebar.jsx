@@ -21,6 +21,7 @@ const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isOpen, setIsOpen] = useState(false); // mobile drawer open state
+  const [prevPathname, setPrevPathname] = useState(pathname);
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/' },
@@ -44,10 +45,13 @@ const Sidebar = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Auto-close the drawer when navigating on mobile
-  useEffect(() => {
+  // Auto-close the drawer when navigating on mobile.
+  // Adjusted during render (not in an effect) to avoid an extra
+  // commit/render pass on every navigation.
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setIsOpen(false);
-  }, [pathname]);
+  }
 
   // Close the drawer on Escape and lock body scroll while it is open
   useEffect(() => {
@@ -215,7 +219,7 @@ const Sidebar = () => {
               label="Logout"
               iconSize={20}
               title={collapsed ? 'Logout' : undefined}
-              className={`group flex items-center rounded-xl text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200 w-full ${
+              className={`group flex items-center rounded-xl text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200 w-full cursor-pointer ${
                 collapsed ? 'justify-center px-0' : 'px-3'
               }`}
               iconClassName="text-red-400 group-hover:text-red-500 transition-colors"

@@ -165,7 +165,7 @@ const Dashboard = () => {
           <h3 className="font-semibold text-gray-800 text-lg">⏱️ Focus Time</h3>
           <p className="text-sm text-gray-500 mt-1">{focusMinutes} minutes today</p>
           <Link
-            href="/pomodoro"
+            href="/timer"
             className="inline-block mt-4 text-sm text-blue-600 font-medium hover:text-blue-700 hover:underline"
           >
             Start timer →

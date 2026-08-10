@@ -74,7 +74,7 @@ const Header = () => {
             showLabel={false}
             iconSize={18}
             title="Logout"
-            className="p-2.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all duration-300 hover:scale-105"
+            className="p-2.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all duration-300 hover:scale-105 cursor-pointer"
             iconClassName=""
           >
             <LogOut size={18} />

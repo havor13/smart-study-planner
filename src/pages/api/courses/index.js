@@ -13,8 +13,8 @@ export default async function handler(req, res) {
 
   // GET: Fetch only authenticated user's courses
   if (req.method === "GET") {
-    try{
-      const courses = await Course.find({userId: authUser._id});
+    try {
+      const courses = await Course.find({ userId: authUser._id });
       return res.status(200).json(courses);
     } catch (error) {
       return res.status(500).json({ error: "Failed to fetch courses" });
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         .replace(/\s+/g, "");
         
       if (!courseCode) {
-        return res.status(400).json({ error: "Course code is required"})
+        return res.status(400).json({ error: "Course code is required" })
       }
 
       const newCourse = new Course({
