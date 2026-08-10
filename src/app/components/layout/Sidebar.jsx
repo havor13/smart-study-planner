@@ -219,7 +219,7 @@ const Sidebar = () => {
               label="Logout"
               iconSize={20}
               title={collapsed ? 'Logout' : undefined}
-              className={`group flex items-center rounded-xl text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200 w-full ${
+              className={`group flex items-center rounded-xl text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200 w-full cursor-pointer ${
                 collapsed ? 'justify-center px-0' : 'px-3'
               }`}
               iconClassName="text-red-400 group-hover:text-red-500 transition-colors"

@@ -41,7 +41,7 @@ const ConfirmModal = ({
           </div>
           <button
             onClick={onCancel}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
             aria-label="Close"
           >
             <X size={18} className="text-gray-400" />
@@ -55,13 +55,13 @@ const ConfirmModal = ({
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold transition-all active:scale-95"
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold transition-all active:scale-95 cursor-pointer"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-red-200 active:scale-95"
+            className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-red-200 active:scale-95 cursor-pointer"
           >
             {confirmLabel}
           </button>

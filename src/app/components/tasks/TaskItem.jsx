@@ -73,7 +73,7 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3 flex-1">
-            <button onClick={handleStatusToggle} className="mt-1 hover:scale-110 transition-transform">
+            <button onClick={handleStatusToggle} className="mt-1 hover:scale-110 transition-transform cursor-pointer">
               {statusIcons[task.status]}
             </button>
             <div className="flex-1">
@@ -111,13 +111,13 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
           >
             <button
               onClick={() => onEdit(task)}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
             >
               <Edit2 size={16} className="text-gray-500" />
             </button>
             <button
               onClick={handleDeleteClick}
-              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
             >
               <Trash2 size={16} className="text-red-500" />
             </button>

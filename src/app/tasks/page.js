@@ -266,7 +266,7 @@ export default function TasksPage() {
             setEditingTask(null);
             setShowForm(true);
           }}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-5 rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg shadow-blue-200"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-5 rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg shadow-blue-200 cursor-pointer"
         >
           <span className="text-white text-xl font-bold">+</span>
           <span className="text-white">New Task</span>

@@ -181,7 +181,7 @@ const PomodoroTimer = () => {
           <button
             key={key}
             onClick={() => switchMode(key)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
               mode === key
                 ? 'bg-white text-gray-800 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
@@ -205,7 +205,7 @@ const PomodoroTimer = () => {
           <select
             value={selectedTaskId}
             onChange={(e) => setSelectedTaskId(e.target.value)}
-            className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 max-w-xs w-full"
+            className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 max-w-xs w-full cursor-pointer"
           >
             <option value="">-- General Study --</option>
             {tasks.map((task) => (
@@ -231,7 +231,7 @@ const PomodoroTimer = () => {
       <div className="flex items-center justify-center gap-4">
         <button
           onClick={toggleTimer}
-          className={`p-4 rounded-full text-white shadow-md transition-all ${
+          className={`p-4 rounded-full text-white shadow-md transition-all cursor-pointer ${
             isActive
               ? 'bg-amber-500 hover:bg-amber-600'
               : 'bg-blue-600 hover:bg-blue-700'
@@ -243,7 +243,7 @@ const PomodoroTimer = () => {
 
         <button
           onClick={resetTimer}
-          className="p-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors"
+          className="p-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors cursor-pointer"
           title="Reset Timer"
         >
           <RotateCcw size={24} />
