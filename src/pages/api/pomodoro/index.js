@@ -3,6 +3,7 @@ import PomodoroSession from '@/models/PomodoroSession';
 import { verifyAuth } from '@utils/verifyAuth';
 
 export default async function handler(req, res) {
+  // Authenticate request and identify current app user
   const auth = await verifyAuth(req, res);
   if (!auth) return;
 
@@ -11,6 +12,7 @@ export default async function handler(req, res) {
   await connectDB();
 
   switch (req.method) {
+    // GET: Fetch only sessions belonging to authenticated user
     case 'GET':
       try {
         const sessions = await PomodoroSession.find({
@@ -25,6 +27,7 @@ export default async function handler(req, res) {
         });
       }
 
+    // PUT: Update only sessions belonging to authenticated user
     case 'POST':
       try {
         const { taskId, startTime, endTime, durationMinutes, type, completed } = req.body;

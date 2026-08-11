@@ -12,12 +12,14 @@ export default function ProfilePage() {
   const router = useRouter();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
 
+  // Redirect unauthenticated users to login page after auth state is resolved
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
     }
   }, [user, authLoading, router]);
 
+  // Wait for both Firebase auth and DB profile to load
   if (authLoading || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -29,6 +31,7 @@ export default function ProfilePage() {
     );
   }
 
+  // Prevent profile page from rendering without authenticated user
   if (!user) return null;
 
   return (

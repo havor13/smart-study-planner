@@ -8,26 +8,33 @@ const TaskList = ({ tasks = [], compact = false, onAddTask, onToggle, onEdit, on
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('dueDate');
 
+  // Filter tasks by status
+  // "All" shows every task
   const filteredTasks = tasks.filter((task) => {
     if (filter === 'all') return true;
     return task.status === filter;
   });
 
+  // Sort filtered tasks by due date | priority | course
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     if (sortBy === 'dueDate') {
       return new Date(a.dueDate) - new Date(b.dueDate);
     }
+
     if (sortBy === 'priority') {
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       return priorityOrder[a.priority] - priorityOrder[b.priority];
     }
+
     if (sortBy === 'course') {
       return (a.course || '').localeCompare(b.course || '');
     }
+
     return 0;
   });
 
   if (compact) {
+    // Compact layout used when task is displayed in smaller views
     return (
       <div className="space-y-1">
         {tasks.slice(0, 5).map((task) => (
@@ -45,7 +52,7 @@ const TaskList = ({ tasks = [], compact = false, onAddTask, onToggle, onEdit, on
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
         >
           <option value="all">All</option>
           <option value="pending">Pending</option>
@@ -55,7 +62,7 @@ const TaskList = ({ tasks = [], compact = false, onAddTask, onToggle, onEdit, on
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
         >
           <option value="dueDate">Sort by Due Date</option>
           <option value="priority">Sort by Priority</option>
@@ -78,7 +85,10 @@ const TaskList = ({ tasks = [], compact = false, onAddTask, onToggle, onEdit, on
         ) : (
           <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
             <p className="text-gray-500">No tasks found</p>
-            <button onClick={onAddTask} className="mt-2 text-blue-600 font-medium hover:underline">
+            <button
+              onClick={onAddTask}
+              className="mt-2 text-blue-600 font-medium hover:underline cursor-pointer"
+            >
               Create a new task →
             </button>
           </div>

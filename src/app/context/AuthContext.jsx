@@ -9,17 +9,19 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  // Bumped whenever we need force re-render with fresh data of cuurent auth user
+
+  // To force dependent components to re-render after refreshing current Firebase user's data
   const [, forceRerender] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Reload user token to fetch updated attributes (like newly verified email)
+        // Reload Firebase user to retrive latest account attributes
+        // For changes like newly verified email or updated profile info
         await user.reload();
         setUser(auth.currentUser);
 
-        // Sync fresh credentials (including updated email) to MongoDB
+        // Sync latest Firebase user data to DB
         fetch('/api/users/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -33,15 +35,15 @@ export function AuthProvider({ children }) {
       } else {
         setUser(null);
       }
+
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Call this after any direct profile/email/password mutation
-  // Header will pick up the change immediately
-  // Instead of waiting for next auth state event or full reload
+  // Refresh current Firebase uer's data after procfile/account change
+  // Components can immediately reflect updates
   const refreshUser = async () => {
     if (!auth.currentUser) return;
     await auth.currentUser.reload();

@@ -15,7 +15,7 @@ import { Pie, Bar } from 'react-chartjs-2';
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 const ProgressChart = ({ tasks = [] }) => {
-  // Calculate status distribution stats matching model enum
+  // Calculate number of tasks in each status using the model's status enums
   const total = tasks.length;
   const completed = tasks.filter((t) => t.status === 'completed').length;
   const inProgress = tasks.filter((t) => t.status === 'in-progress').length;
@@ -32,11 +32,12 @@ const ProgressChart = ({ tasks = [] }) => {
     ],
   };
 
-  // Aggregate tasks dynamically by populated courseCode (or fallback)
+  // Group tasks by course and track total and completed tasks for each course
   const courseCounts = {};
 
   tasks.forEach((task) => {
-    // Get course code from populated object or fallback label
+    // Use populated course code when vailable
+    // Or group task as general
     const courseCode =
       typeof task.courseId === 'object' && task.courseId?.courseCode
         ? task.courseId.courseCode

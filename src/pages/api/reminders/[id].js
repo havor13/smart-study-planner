@@ -1,3 +1,6 @@
+/** API ENDPOINT FOR FUTURE IMPLEMENTATION
+ * Reminders for tasks
+ */
 import { connectDB } from '@/lib/mongodb';
 import Reminder from '@/models/Reminder';
 

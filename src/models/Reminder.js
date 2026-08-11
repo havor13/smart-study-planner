@@ -1,6 +1,6 @@
-// KEEP FOR NOW
-// For future implementation of reminders for tasks
-
+/** MODEL FOR FUTURE IMPLEMENTATION
+ * Reminders for tasks
+ */
 import mongoose from 'mongoose';
 
 const ReminderSchema = new mongoose.Schema({

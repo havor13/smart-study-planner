@@ -11,13 +11,18 @@ export default function ProgressPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch authenticated user's tasks
+  // Display fetched data as progress analyrics
   useEffect(() => {
     const fetchTasks = async () => {
       if (!user) return;
 
       try {
         setLoading(true);
+
+        // Authenticate API requiest using Firebase user's ID token
         const token = await user.getIdToken();
+
         const res = await fetch('/api/tasks', {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -29,8 +34,10 @@ export default function ProgressPage() {
         }
 
         const data = await res.json();
-        // Handle direct array or wrapped data response ({ tasks: [...] })
+
+        // Support both direct array responses and responses wrapped in a tasks property
         const fetchedTasks = Array.isArray(data) ? data : data.tasks || [];
+
         setTasks(fetchedTasks);
       } catch (err) {
         console.error('Error loading progress stats:', err);

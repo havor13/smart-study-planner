@@ -27,6 +27,7 @@ const LogoutButton = ({
     }
 
     try {
+      // Sign out through AuthContext before redirecting to /login
       await logout();
       router.push('/login');
     } catch (error) {

@@ -23,11 +23,9 @@ import {
 } from 'lucide-react';
 import { getFriendlyAuthError } from '@/lib/firebaseErrors';
 
-// `updateProfile` prop = MongoDB sync function passed down from the parent
-// (kept as a prop per Doc 2's architecture, aliased on import to avoid
-// clashing with Firebase's own `updateProfile`).
 export default function ProfileForm({ user, profile, updateProfile }) {
   const { refreshUser } = useAuth();
+
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -43,6 +41,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
     confirmPassword: '',
   });
 
+  // Reset form to latest profile values and clear avatar error
   const resetForm = () => {
     setForm({
       name: profile?.name || user?.displayName || '',
@@ -60,25 +59,28 @@ export default function ProfileForm({ user, profile, updateProfile }) {
     setMessage({ type: '', text: '' });
     setSaving(true);
 
+    // Stop update if there's no authenticated Firebase user
     if (!user) {
       setMessage({ type: 'error', text: 'No authenticated user found.' });
       setSaving(false);
       return;
     }
 
+    // Determine which types of account info have changed
     const isEmailChanging = form.email.trim().toLowerCase() !== (user.email || '').toLowerCase();
     const isPasswordChanging = Boolean(form.newPassword);
     const isProfileChanging =
       form.name.trim() !== (profile?.name || user.displayName || '') ||
       form.avatar.trim() !== (profile?.avatar || user.photoURL || '');
 
-    // Validate password match/length up front, before any reauth call
+    // Validate new password before attempting Firebase re-auth
     if (isPasswordChanging) {
       if (form.newPassword !== form.confirmPassword) {
         setMessage({ type: 'error', text: 'New passwords do not match.' });
         setSaving(false);
         return;
       }
+
       if (form.newPassword.length < 6) {
         setMessage({
           type: 'error',
@@ -89,7 +91,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
       }
     }
 
-    // Explicitly require current password for any security-sensitive change
+    // Require current password before making email or password change
     if ((isEmailChanging || isPasswordChanging) && !form.currentPassword) {
       setMessage({
         type: 'error',
@@ -100,22 +102,26 @@ export default function ProfileForm({ user, profile, updateProfile }) {
     }
 
     try {
-      // Re-authenticate if updating email or password
+      // Re-auth user before changing security-sensitive account details
       if (isEmailChanging || isPasswordChanging) {
         const credential = EmailAuthProvider.credential(user.email, form.currentPassword);
         await reauthenticateWithCredential(user, credential);
       }
 
-      // Update name & avatar: Firebase profile + MongoDB sync (via prop)
+      // Update name and avatar in Firebase
+      // Then sync to DB
       if (isProfileChanging) {
         await updateFirebaseProfile(user, {
           displayName: form.name.trim(),
           photoURL: form.avatar.trim(),
         });
+
         await updateProfile({
           name: form.name.trim(),
           avatar: form.avatar.trim(),
         });
+
+        // Refresh authenticated user to reflect updated Firebase profile
         await refreshUser();
       }
 
@@ -124,15 +130,15 @@ export default function ProfileForm({ user, profile, updateProfile }) {
         await updatePassword(user, form.newPassword);
       }
 
-      // Email changes go through verification, never applied immediately
+      // Send verificatioin email for email changes
       if (isEmailChanging) {
-        // TODO: Requires testing in production version
         const actionCodeSettings = {
           url: `${window.location.origin}/login?emailVerified=true`,
           handleCodeInApp: true,
         };
 
         await verifyBeforeUpdateEmail(user, form.email.trim(), actionCodeSettings);
+
         setMessage({
           type: 'success',
           text: `Verification link sent to ${form.email}! Please check your inbox (and spam/junk folder) to complete your email update.`,
@@ -150,9 +156,11 @@ export default function ProfileForm({ user, profile, updateProfile }) {
         newPassword: '',
         confirmPassword: '',
       }));
+
       setIsEditing(false);
       setShowPasswordFields(false);
     } catch (err) {
+      // Convert Firebase errors into user-friendly messages
       setMessage({ type: 'error', text: getFriendlyAuthError(err) });
     } finally {
       setSaving(false);

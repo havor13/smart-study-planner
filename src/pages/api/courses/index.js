@@ -3,7 +3,7 @@ import Course from '@/models/Course';
 import { verifyAuth } from '@utils/verifyAuth';
 
 export default async function handler(req, res) {
-  // Authenticate user and ensure DB connection
+  // Authenticate request and identify current app user
   const auth = await verifyAuth(req, res);
   if (!auth) return;
 
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   await connectDB();
 
-  // GET: Fetch only authenticated user's courses
+  // GET: Fetch only courses belonging to authenticated user
   if (req.method === 'GET') {
     try {
       const courses = await Course.find({ userId: authUser._id });
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // POST: Create a new course for authenticated user
+  // POST: Create a new course only for authenticated user
   if (req.method === 'POST') {
     try {
       let { courseCode } = req.body;

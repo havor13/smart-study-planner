@@ -2,6 +2,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 
 export default async function handler(req, res) {
+  // Only POST requests are supported for user sync
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
@@ -10,10 +11,12 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Connect to DB before creating or updating user recprd
     await connectDB();
 
     const { firebaseUid, email, displayName, name, photoURL, avatar } = req.body;
 
+    // Firebase UID and email required to identify and create user
     if (!firebaseUid || !email) {
       return res.status(400).json({
         success: false,
@@ -21,11 +24,14 @@ export default async function handler(req, res) {
       });
     }
 
+    // Use avaiable Firebase/user info to provide fallback values
     const userName = name || displayName || email.split('@')[0];
     const userAvatar = avatar || photoURL || '';
 
+    // Find corresponding DB user using FirebaseUID
     let user = await User.findOne({ firebaseUid });
 
+    // Create DB user record if it's new Firebase user
     if (!user) {
       user = await User.create({
         firebaseUid,
@@ -41,7 +47,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Keep name/avatar updated if changed in Firebase
+    // Check if exisiting user info has changed in Firebase
     let hasChanges = false;
 
     if (user.email !== email) {

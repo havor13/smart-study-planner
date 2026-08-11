@@ -13,20 +13,26 @@ const TaskForm = ({ task, courses = [], onSubmit, onClose, readOnly = false }) =
     status: task?.status || 'pending',
   });
 
-  // Close the modal on Escape key
   useEffect(() => {
+    // Allow form to be closed with `ESC` key
+    // Clean up listener on unmount
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && onClose) onClose();
     };
+
     window.addEventListener('keydown', handleKeyDown);
+
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Normalize entered course code
+    // Spacing and letter cose do not affect course lookup
     const normalizedCode = formData.course.toUpperCase().replace(/\s+/g, '');
 
+    // Find matching course from user's existing courses
     const selectedCourse = courses.find(
       (c) => c.courseCode.toUpperCase().replace(/\s+/g, '') === normalizedCode,
     );

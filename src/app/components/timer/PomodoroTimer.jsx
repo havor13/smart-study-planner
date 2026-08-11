@@ -29,7 +29,8 @@ const PomodoroTimer = () => {
   const [tasks, setTasks] = useState([]);
   const [selectedTaskId, setSelectedTaskId] = useState('');
 
-  // Track precise real-world system times
+  // Store actual start time and elapsed time
+  // Timer calculates progress from real system time instead of interval ticks
   const [startTime, setStartTime] = useState(null);
   const [elapsedMs, setElapsedMs] = useState(0);
 
@@ -40,24 +41,32 @@ const PomodoroTimer = () => {
   const msLeft = Math.max(0, totalDurationMs - elapsedMs);
   const timeLeftSeconds = Math.ceil(msLeft / 1000);
 
+  // Generate two-tone chime using browser's Web Audio API
   const playChime = useCallback(() => {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
+
       if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
+
       const ctx = audioCtxRef.current;
       if (ctx.state === 'suspended') ctx.resume();
 
       const now = ctx.currentTime;
+
       [0, 0.22].forEach((offset, i) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
+
         osc.type = 'sine';
         osc.frequency.value = i === 0 ? 880 : 1046.5;
+
         gain.gain.setValueAtTime(0, now + offset);
         gain.gain.linearRampToValueAtTime(0.3, now + offset + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.2);
+
         osc.connect(gain);
         gain.connect(ctx.destination);
+
         osc.start(now + offset);
         osc.stop(now + offset + 0.22);
       });
@@ -66,19 +75,23 @@ const PomodoroTimer = () => {
     }
   }, []);
 
+  // Fetch user's incomplete tasks to associate session with a task
   useEffect(() => {
     const fetchTasks = async () => {
       if (!user) return;
+
       try {
         const token = await user.getIdToken();
         const res = await fetch('/api/tasks', {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         if (res.ok) {
           const data = await res.json();
           const pendingTasks = (Array.isArray(data) ? data : data.tasks || []).filter(
             (t) => t.status !== 'completed',
           );
+
           setTasks(pendingTasks);
         }
       } catch (err) {
@@ -89,14 +102,17 @@ const PomodoroTimer = () => {
     fetchTasks();
   }, [user]);
 
+  // Load today's completed focus sessions from DB to restore cycle count
   useEffect(() => {
     const fetchTodayCycles = async () => {
       if (!user) return;
+
       try {
         const token = await user.getIdToken();
         const res = await fetch('/api/pomodoro', {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         if (res.ok) {
           const sessions = await res.json();
 
@@ -117,11 +133,14 @@ const PomodoroTimer = () => {
     fetchTodayCycles();
   }, [user]);
 
+  // Save each completed seesion to DB
   const saveSessionToDB = useCallback(
     async (sessionData) => {
       if (!user) return;
+
       try {
         const token = await user.getIdToken();
+
         await fetch('/api/pomodoro', {
           method: 'POST',
           headers: {
@@ -137,6 +156,7 @@ const PomodoroTimer = () => {
     [user],
   );
 
+  // Reset current timer before switching between study/break modes
   const switchMode = useCallback((newMode) => {
     setIsActive(false);
     setStartTime(null);
@@ -144,9 +164,11 @@ const PomodoroTimer = () => {
     setMode(newMode);
   }, []);
 
+  // Record completed session and auto choose next mode
   const handleSessionComplete = useCallback(async () => {
     const sessionEndTime = new Date();
-    // Use the actual historical start time, fallback to an exact delta only if null
+
+    // Use recorded start time to store actual session period in DB
     const sessionStartTime = startTime || new Date(sessionEndTime.getTime() - totalDurationMs);
 
     await saveSessionToDB({
@@ -164,13 +186,16 @@ const PomodoroTimer = () => {
     if (mode === 'work') {
       const nextCycles = cycles + 1;
       setCycles(nextCycles);
+
+      // Long break after every four cycles
       switchMode(nextCycles % 4 === 0 ? 'longBreak' : 'shortBreak');
     } else {
       switchMode('work');
     }
   }, [startTime, mode, selectedTaskId, cycles, totalDurationMs, saveSessionToDB, switchMode]);
 
-  // Precise Delta Timer loop running at high frequency (100ms) to bypass tab sleep drift
+  // Update timer from real elapsed time
+  // Avoids drift when brwoser throttles or pauses callbacks from inactivity
   useEffect(() => {
     if (!isActive) {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -194,14 +219,16 @@ const PomodoroTimer = () => {
     }, 100);
 
     return () => clearInterval(timerRef.current);
-  }, [isActive, totalDurationMs, playChime, handleSessionComplete]); // Dependency array kept light on shifting state
+  }, [isActive, totalDurationMs, playChime, handleSessionComplete]);
 
   const toggleTimer = () => {
     if (!isActive) {
+      // Preserve original start time when resuming paused session
       if (!startTime) {
         setStartTime(new Date());
       }
     }
+
     setIsActive((prev) => !prev);
   };
 
@@ -225,7 +252,7 @@ const PomodoroTimer = () => {
           <button
             key={key}
             onClick={() => switchMode(key)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer hover:bg-white ${
               mode === key
                 ? 'bg-white text-gray-800 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'

@@ -10,11 +10,13 @@ const Header = () => {
   const { user } = useAuth();
   const [avatarError, setAvatarError] = useState(false);
 
-  // Reset the error flag whenever the photo URL changes
+  // Reset the error flag whenever the photo URL itself changes
   useEffect(() => {
     setAvatarError(false);
   }, [user?.photoURL]);
 
+  // Generate up to two initials from user's display name
+  // Or fallback to first letter in their email
   const getInitials = () => {
     if (user?.displayName) {
       return user.displayName
@@ -27,15 +29,18 @@ const Header = () => {
     if (user?.email) {
       return user.email[0].toUpperCase();
     }
-    return 'JD';
+    return 'U'; // "U" for user as last defensive fallback
   };
 
+  // Use display name when avaiable
+  // Or derive name from email
   const getUserName = () => {
     if (user?.displayName) return user.displayName;
     if (user?.email) return user.email.split('@')[0];
     return 'User';
   };
 
+  // Display greeting based on current time of day
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning';
@@ -43,6 +48,7 @@ const Header = () => {
     return 'Good Evening';
   };
 
+  // Show users's profile photo when valid photo URL is available
   const showAvatarImage = Boolean(user?.photoURL) && !avatarError;
 
   return (

@@ -44,7 +44,7 @@ const Dashboard = () => {
         if (pomodoroRes && pomodoroRes.ok) {
           const pomodoroData = await pomodoroRes.json();
 
-          // Calculate total focus minutes for today
+          // Sum completed Pomodoro session recoreded today
           const today = new Date().toDateString();
           const todayMinutes = pomodoroData
             .filter(
@@ -65,7 +65,7 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [user]);
 
-  // Dynamic task calculations
+  // Calculate task stats used by dashboard cards
   const totalTasks = safeTasks.length;
   const completedTasks = safeTasks.filter((t) => t.status === 'completed').length;
   const inProgressTasks = safeTasks.filter((t) => t.status === 'in-progress').length;
@@ -73,7 +73,7 @@ const Dashboard = () => {
 
   const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // Calculate upcoming deadlines within the next 7 days
+  // Count unifinished tasks due within seven days
   const upcomingDeadlinesCount = safeTasks.filter((t) => {
     if (!t.dueDate || t.status === 'completed') return false;
     const due = new Date(t.dueDate);

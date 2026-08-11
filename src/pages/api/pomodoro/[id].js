@@ -4,6 +4,7 @@ import { verifyAuth } from '@utils/verifyAuth';
 import mongoose from 'mongoose';
 
 export default async function handler(req, res) {
+  // Authenticate request and identify current app user
   const auth = await verifyAuth(req, res);
   if (!auth) return;
 
@@ -20,6 +21,7 @@ export default async function handler(req, res) {
   }
 
   switch (req.method) {
+    // GET: Fetch only sessions belonging to authenticated user
     case 'GET':
       try {
         const session = await PomodoroSession.findOne({
@@ -41,6 +43,7 @@ export default async function handler(req, res) {
         });
       }
 
+    // PUT: Update only sessions belonging to authenticated user
     case 'PUT':
       try {
         const { taskId, startTime, endTime, durationMinutes, type, completed } = req.body;
@@ -79,6 +82,8 @@ export default async function handler(req, res) {
         });
       }
 
+    // TODO: Future feature implementation
+    // DELETE: Delete a session only belonging to authenticated user
     case 'DELETE':
       try {
         const deletedSession = await PomodoroSession.findOneAndDelete({

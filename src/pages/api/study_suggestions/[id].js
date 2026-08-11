@@ -1,3 +1,6 @@
+/** API ENDPOINT FOR FUTURE IMPLEMENTATION
+ * AI study suggestions
+ */
 import { connectDB } from '@/lib/mongodb';
 import StudySuggestion from '@/models/StudySuggestion';
 

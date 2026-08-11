@@ -11,12 +11,14 @@ const ConfirmModal = ({
   onConfirm,
   onCancel,
 }) => {
-  // Close on Escape key
+  // Allow modal to close with `Esc`
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && onCancel) onCancel();
     };
+
     window.addEventListener('keydown', handleKeyDown);
+
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onCancel]);
 

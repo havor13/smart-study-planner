@@ -4,7 +4,7 @@ import Course from '@/models/Course';
 import { verifyAuth } from '@utils/verifyAuth';
 
 export default async function handler(req, res) {
-  // Authenticate user
+  // Authenticate request and identify current app user
   const auth = await verifyAuth(req, res);
   if (!auth) {
     // Return 401 if verifyAuth didn't send a response already
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
 
   await connectDB();
 
-  // GET: Fetch all tasks belonging to authenticated user
+  // GET: Fetch only tasks belonging to authenticated user
   if (req.method === 'GET') {
     try {
       const { courseId } = req.query;
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // POST: Create new task tied to authenticated user
+  // POST: Create a new task only for authenticated user
   if (req.method === 'POST') {
     try {
       const { courseId, title, description, priority, status, dueDate } = req.body;

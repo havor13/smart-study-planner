@@ -4,7 +4,6 @@ import Task from '@/models/Task';
 import { verifyAuth } from '@utils/verifyAuth';
 
 export default async function handler(req, res) {
-  // Authenticate user
   const auth = await verifyAuth(req, res);
   if (!auth) {
     return res.headersSent ? null : res.status(401).json({ error: 'Unauthorized' });
@@ -17,21 +16,22 @@ export default async function handler(req, res) {
   // GET: Fetch authenticated user's profile
   if (req.method === 'GET') {
     try {
-      const totalTasks = await Task.countDocuments({
-        userId: authUser._id,
-      });
-
-      const completedTasks = await Task.countDocuments({
-        userId: authUser._id,
-        status: 'completed',
-      });
-
-      const activeTasks = await Task.countDocuments({
-        userId: authUser._id,
-        status: 'in-progress',
-      });
-
-      const completionRate = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+      // TODO: Future badge implementations
+      // NOTE: task stats are currently unused by the profile page
+      // (ProfileCard / ProfileForm only read name/email/avatar).
+      // Commented out to avoid 3 extra DB queries per profile load.
+      // Re-enable when a decorative badge / stats UI is added.
+      //
+      // const totalTasks = await Task.countDocuments({ userId: authUser._id });
+      // const completedTasks = await Task.countDocuments({
+      //   userId: authUser._id,
+      //   status: "completed",
+      // });
+      // const activeTasks = await Task.countDocuments({
+      //   userId: authUser._id,
+      //   status: "in-progress",
+      // });
+      // const completionRate = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
       return res.status(200).json({
         profile: {
@@ -42,11 +42,11 @@ export default async function handler(req, res) {
           avatar: authUser.avatar,
           createdAt: authUser.createdAt,
           updatedAt: authUser.updatedAt,
-          stats: {
-            tasksDone: completedTasks,
-            completionRate,
-            activeTasks,
-          },
+          // stats: {
+          //   tasksDone: completedTasks,
+          //   completionRate,
+          //   activeTasks,
+          // },
         },
       });
     } catch (error) {
@@ -65,9 +65,7 @@ export default async function handler(req, res) {
       const updateData = {};
 
       if (name !== undefined) updateData.name = name.trim();
-
       if (email !== undefined) updateData.email = email.trim().toLowerCase();
-
       if (avatar !== undefined) updateData.avatar = avatar;
 
       const updatedUser = await User.findByIdAndUpdate(
@@ -78,6 +76,11 @@ export default async function handler(req, res) {
           runValidators: true,
         },
       );
+
+      // No stats mirroring needed here
+      // GET no longer returns stats either
+      // So both handlers now agree on the same (bare) profile shape
+      // See note in GET above.
 
       return res.status(200).json({
         profile: updatedUser,

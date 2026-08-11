@@ -4,7 +4,7 @@ import Course from '@/models/Course';
 import { verifyAuth } from '@utils/verifyAuth';
 
 export default async function handler(req, res) {
-  // Authenticate user
+  // Authenticate request and identify current app user
   const auth = await verifyAuth(req, res);
   if (!auth) {
     return res.headersSent ? null : res.status(401).json({ error: 'Unauthorized' });
@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
   const { id } = req.query;
 
-  // GET: Fetch single task with strict ownership scoping
+  // GET: Fetch only tasks belonging to authenticated user
   if (req.method === 'GET') {
     try {
       const task = await Task.findOne({ _id: id, userId: authUser._id });
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // PUT / PATCH: Update task with field whitelist and cross-resource ownership check
+  // PUT / PATCH: Update only tasks belonging to authenticated user
   if (req.method === 'PUT' || req.method === 'PATCH') {
     try {
       const { title, description, priority, status, dueDate, courseId } = req.body;
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // DELETE: Delete task with strict ownership check
+  // DELETE: Delete a task only belonging to authenticated user
   if (req.method === 'DELETE') {
     try {
       const deletedTask = await Task.findOneAndDelete({ _id: id, userId: authUser._id });

@@ -9,6 +9,7 @@ export default function ProtectedRoute({ children }) {
   const router = useRouter();
 
   useEffect(() => {
+    // Redirect unauthenticated users after complete initial auth check
     if (!loading && !user) {
       router.replace('/login');
     }

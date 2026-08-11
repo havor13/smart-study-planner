@@ -37,12 +37,13 @@ export default function LoginPage() {
   });
 
   const isSignup = view === 'signup';
+
   const toggleView = () => {
     setView(isSignup ? 'signin' : 'signup');
     setError('');
   };
 
-  // Helper function to send Firebase user details to sync.js
+  // Sync authenticared Firebase user with corresponding DB profile
   const syncUserToMongoDB = async (user, fallbackName = '') => {
     try {
       await fetch('/api/users/sync', {
@@ -62,11 +63,12 @@ export default function LoginPage() {
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      // Don't auto-redirect while manually processing login/signup submit
+      // Avoid redirecting whil current signin.signup submission is still processing
       if (user && !loading) {
         router.push('/');
       }
     });
+
     return () => unsubscribe();
   }, [router, loading]);
 
@@ -82,7 +84,7 @@ export default function LoginPage() {
         formData.password,
       );
 
-      // Ensure sync completes before pushing to home page
+      // Complete DB sync before navigating to dashboard
       await syncUserToMongoDB(userCredential.user);
 
       router.push('/');
@@ -98,6 +100,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
+    // Validate password before creating Firebase account
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match. Please try again.');
       setLoading(false);
@@ -106,16 +109,19 @@ export default function LoginPage() {
 
     try {
       const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
         formData.password,
       );
 
+      // Add user's display name to Firebase profile before sync
       await updateProfile(userCredential.user, {
         displayName: formData.name,
       });
 
+      // Create corresponding DB profile after Firebase registration
       await syncUserToMongoDB(userCredential.user, formData.name);
 
       router.push('/');

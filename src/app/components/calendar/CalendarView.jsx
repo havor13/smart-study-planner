@@ -53,7 +53,7 @@ const CalendarView = () => {
         // Extract tasks array
         const rawTasks = Array.isArray(data) ? data : data.tasks || data.data || [];
 
-        // Format tasks into react-big-calendar event structure
+        // Convert DB tasks into react-big-calendar event format
         const formattedEvents = rawTasks
           .filter((task) => task.dueDate) // Only include tasks that have a due date
           .map((task) => {
@@ -84,6 +84,7 @@ const CalendarView = () => {
   }, [user]);
 
   // Open the shared TaskForm modal (read-only) when an event is clicked
+  // Store selected task to display in shared modal
   const handleSelectEvent = (event) => {
     if (event?.task) {
       setSelectedTask(event.task);

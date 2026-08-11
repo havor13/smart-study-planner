@@ -13,18 +13,21 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
 
-  // Helper to get a fresh Firebase ID Token dynamically (no localStorage required)
+  // Get fresh Firebase ID token for each authenticated API request
   const getAuthHeaders = useCallback(async () => {
     const user = auth.currentUser;
+
     if (!user) throw new Error('No authenticated Firebase user found');
 
-    const token = await user.getIdToken(); // Get fresh ID Token from Firebase SDK
+    const token = await user.getIdToken();
+
     return {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     };
   }, []);
 
+  // Fetch authenticated user's tasks from backend
   const fetchTasks = useCallback(async () => {
     try {
       const headers = await getAuthHeaders();
@@ -43,6 +46,7 @@ export default function TasksPage() {
     }
   }, [getAuthHeaders]);
 
+  // Fetch user's courses to link tasks to existing course records
   const fetchCourses = useCallback(async () => {
     try {
       const headers = await getAuthHeaders();
@@ -59,12 +63,13 @@ export default function TasksPage() {
     }
   }, [getAuthHeaders]);
 
-  // Wait for Firebase Auth state to resolve on initial load
+  // Wait for Firebase Auth state before fetching user-specifif data
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         await Promise.all([fetchTasks(), fetchCourses()]);
       }
+
       setLoading(false);
     });
 
@@ -75,12 +80,14 @@ export default function TasksPage() {
     try {
       const headers = await getAuthHeaders();
 
+      // Normalize course code to avoid format differences from creating duplicates
       const normalizedCode = taskData.course.toUpperCase().replace(/\s+/g, '');
 
       let course = courses.find(
         (c) => c.courseCode.toUpperCase().replace(/\s+/g, '') === normalizedCode,
       );
 
+      // Auto create course when entered course code doesn't exist
       if (!course) {
         const courseRes = await fetch('/api/courses', {
           method: 'POST',
@@ -99,6 +106,7 @@ export default function TasksPage() {
         setCourses((prev) => [...prev, course]);
       }
 
+      // Replace form's course text with DB course reference
       const payload = {
         ...taskData,
         courseId: course._id,
@@ -116,9 +124,11 @@ export default function TasksPage() {
 
       const data = await res.json();
 
+      // Keep populated course object in local state for immediate display
       const enrichedTask = { ...data.task, courseId: course };
 
       setTasks((prev) => [enrichedTask, ...prev]);
+
       setShowForm(false);
     } catch (error) {
       console.error('Add task error:', error);
@@ -130,12 +140,14 @@ export default function TasksPage() {
       const taskId = editingTask.id || editingTask._id;
       const headers = await getAuthHeaders();
 
+      // Normalize course code before looking for existing course
       const normalizedCode = taskData.course.toUpperCase().replace(/\s+/g, '');
 
       let course = courses.find(
         (c) => c.courseCode.toUpperCase().replace(/\s+/g, '') === normalizedCode,
       );
 
+      // Create course automatically if edited tasks uses new course code
       if (!course) {
         const courseRes = await fetch('/api/courses', {
           method: 'POST',
@@ -171,6 +183,7 @@ export default function TasksPage() {
 
       const data = await res.json();
 
+      // Keep edited task consistent with populated course structure
       const enrichedTask = { ...data.task, courseId: course };
 
       setTasks((prev) =>
@@ -207,6 +220,8 @@ export default function TasksPage() {
       const data = await res.json();
       const updatedTask = data.task || data;
 
+      // Update only changed task
+      // Preserve rest of the list
       setTasks((prev) =>
         prev.map((task) =>
           task._id === id || task.id === id ? { ...task, ...updatedTask } : task,
@@ -218,9 +233,10 @@ export default function TasksPage() {
   };
 
   const handleDeleteTask = async (id) => {
-    // Confirmation is handled by the ConfirmModal in TaskItem
+    //TaskItem handles confirmation before deletion request is made
     try {
       const headers = await getAuthHeaders();
+
       const res = await fetch(`/api/tasks/${id}`, {
         method: 'DELETE',
         headers,
@@ -228,6 +244,7 @@ export default function TasksPage() {
 
       if (!res.ok) throw new Error('Failed to delete task');
 
+      // Remove deleted task from local state without refetching list
       setTasks((prev) => prev.filter((task) => (task.id || task._id) !== id));
     } catch (error) {
       console.error('Delete task error:', error);

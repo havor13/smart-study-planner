@@ -8,9 +8,11 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // Support both DB's _id and legacy frontend id
   const taskId = task._id || task.id;
 
-  // Extract course code dynamically from populated object, direct key, or legacy prop
+  // Extract course code from populated course obkect
+  // Or fallback to the older direct course fields
   const courseCode =
     typeof task.courseId === 'object' && task.courseId !== null
       ? task.courseId.courseCode
@@ -28,25 +30,30 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
     pending: <Circle className="text-gray-400" size={20} />,
   };
 
+  // Cycle task through available statuses when toggled
   const handleStatusToggle = () => {
     const statusMap = {
       pending: 'in-progress',
       'in-progress': 'completed',
       completed: 'pending',
     };
+
     onToggle(taskId, statusMap[task.status]);
   };
 
+  // Open confirmation modal instead of instant deletion
   const handleDeleteClick = () => {
     setConfirmDelete(true);
   };
 
+  // Close confirmation modal and delete task after
   const handleConfirmDelete = () => {
     setConfirmDelete(false);
     onDelete(taskId);
   };
 
   if (compact) {
+    // Compact layout used when task is displayed in smaller views
     return (
       <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
         <div className="flex items-center gap-2">
