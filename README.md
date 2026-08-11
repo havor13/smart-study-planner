@@ -15,37 +15,59 @@ Smart Study Planner helps students organize study schedules, assignments, and de
 ## ✨ Features
 
 - 🔐 **User Authentication** – Secure login and personalized dashboard
-- 📅 **Calendar Integration** – Add classes, exams, and assignment deadlines
 - ✅ **Task Management** – Create, edit, and prioritize study tasks
+- 📅 **Calendar Integration** – Add classes, exams, and assignment deadlines
 - 📊 **Progress Tracking** – Visual charts showing completed vs. pending tasks
-- 🤖 **AI Study Suggestions** – Recommend study blocks based on workload and performance
-- 🔔 **Reminders & Notifications** – Alerts for upcoming deadlines and study sessions
-- 🔄 **Cross-Device Sync** – Access planner from phone or computer
+- 👤 **Profile Management** - Simple profile management to update email address with verification and change password
+- 🔄 **Cross-Platform** – Access planner from phone or computer wtih dynamic views
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: React
-- **Backend**: Firebase (Authentication + Realtime Database)
-- **Visualization**: Chart.js
-- **Deployment**: Render / PythonAnywhere
+**Frontend**:
+
+- Next.js 16.2.11
+- React 18.2.0
+- Tailwind CSS 4.3.3
+
+**Backend**:
+
+- Next.js API Routes
+- Firebase Authentication 12.16.0
+- Firebase Admin SDk 14.2.0
+
+**Database**
+
+- MongoDB Atlas with Mongoose 9.7.4
+
+**Visualization**:
+
+- Chart.js 4.5.1, React Chart.js 2 5.3.1
+
+**Calendar**:
+
+- React Big Calendar 1.20.0
+
+**Deployment**:
+
+- Vercel
+
+**Language**:
+
+- JavaScript (ES6+)
 
 ## 👥 Team
 
-- Sampson Havor (Project Lead)
-- Julyanne Lee Rue Yuin
+- Julyanne Lee Rue Yuin (Project Lead)
+- Sampson Havor
 - Uthman Abisola Kolawole
-
-## 📅 Meetings
-
-- Weekly synchronous meeting: Thursdays @ 05:00
 
 ## 🚀 Getting Started
 
 1. Clone the repository:
 
-   ```bash
-   git clone https://github.com/your-username/smart-study-planner.git
-   ```
+```bash
+git clone https://github.com/havor13/smart-study-planner.git
+```
 
 2. Navigate into the project:
 
@@ -59,13 +81,66 @@ cd smart-study-planner
 npm install
 ```
 
-4. Start development server:
+### Environment Variables
+
+Copy [.env.example](.env.example) to [.env.local](.env.local) and fill in the required values.
+
+The project requires:
+
+- Firebase client configuration for Firebase Authentication
+- Firebase Admins SDK credentials for server-side authentication verification
+- MongoDB Atlas connection URI for database access
+
+### Firebase Setup & Credentials
+
+Follow **Step 1** of the official [Firebase Documentation](https://firebase.google.com/docs/web/setup) to setup a Firebase project.
+
+1. Create a Firebase project
+2. Register/Add a Web App
+3. Enable Authentication > Sign-in method > Email/Password
+4. Obtain the client configuration from Settings > General
+5. Generate Firebase Admin SDK from Settings > Service accounts > Generate a new private key
+
+#### MongoDB Atlas Setup & Credentials
+
+Guide: [MongoDB Atlas Tutorial](https://www.mongodb.com/resources/products/platform/mongodb-atlas-tutorial)
+
+1. Create a MongoDB Atlas project
+2. Create a cluster
+3. Create a database user (can create multiple if you wish to separate development and production credentials)
+4. Configure network access from Security > Database & Network Access > Network Access > IP Access List
+5. Get connection string from Project Overview dashboard
+
+### Run Development Server
+
+After setting up the project with the needed credentials, start the development server:
 
 ```bash
 npm run dev
 ```
 
-## Environment Variables
+## Available Scripts
 
-Create a `.env.local` file in the project root.
-Refer to `.env.example` for the required variables.
+```bash
+npm run dev             # Start development server
+npm run build           # Create production build
+npm start               # Start production server
+npm run lint            # Run ESLint
+npm run format:check    # Check code formats with prettier
+npm run format:fix      # Fix code formats with prettier
+```
+
+## Database Seeding
+
+To populate the database with a set of usable data, replace the Firebase UID [here](seed.js#L65) with your own Firebase UID. Then run:
+
+```bash
+npm run seed
+```
+
+## Troubleshooting
+
+- Missing environment variables: check [.env.local](.env.local)
+- Firebase Admin errors: verify service-account credentials
+- MongoDB connection errors: check Atlas network access and connection string
+- Authentication/API errors: make sure Firebase Auth is enabled and the app is using the correct project

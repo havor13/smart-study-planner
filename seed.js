@@ -62,7 +62,7 @@ const Task = mongoose.models.Task || mongoose.model('Task', taskSchema);
 const PomodoroSession =
   mongoose.models.PomodoroSession || mongoose.model('PomodoroSession', pomodoroSessionSchema);
 
-const FIREBASE_UID = 'FNMDmKvcMMXL0ZNEoG4lBIQKI6p1';
+const FIREBASE_UID = 'REPLACE_WITH_YOUR_FIERBASE_UID';
 
 async function seedDatabase() {
   try {
