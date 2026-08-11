@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useAuth } from "@/app/context/AuthContext";
+import { useState } from 'react';
+import { useAuth } from '@/app/context/AuthContext';
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   verifyBeforeUpdateEmail,
   updateProfile as updateFirebaseProfile,
   updatePassword,
-} from "firebase/auth";
+} from 'firebase/auth';
 import {
   Edit2,
   User,
@@ -20,106 +20,108 @@ import {
   Shield,
   Save,
   X,
-} from "lucide-react";
-import { getFriendlyAuthError } from "@/lib/firebaseErrors";
+} from 'lucide-react';
+import { getFriendlyAuthError } from '@/lib/firebaseErrors';
 
-// `updateProfile` prop = MongoDB sync function passed down from the parent
-// (kept as a prop per Doc 2's architecture, aliased on import to avoid
-// clashing with Firebase's own `updateProfile`).
 export default function ProfileForm({ user, profile, updateProfile }) {
   const { refreshUser } = useAuth();
+
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [saving, setSaving] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   const [form, setForm] = useState({
-    name: profile?.name || user?.displayName || "",
-    email: profile?.email || user?.email || "",
-    avatar: profile?.avatar || user?.photoURL || "",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
+    name: profile?.name || user?.displayName || '',
+    email: profile?.email || user?.email || '',
+    avatar: profile?.avatar || user?.photoURL || '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   });
 
+  // Reset form to latest profile values and clear avatar error
   const resetForm = () => {
     setForm({
-      name: profile?.name || user?.displayName || "",
-      email: profile?.email || user?.email || "",
-      avatar: profile?.avatar || user?.photoURL || "",
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
+      name: profile?.name || user?.displayName || '',
+      email: profile?.email || user?.email || '',
+      avatar: profile?.avatar || user?.photoURL || '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
     });
     setAvatarError(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage({ type: "", text: "" });
+    setMessage({ type: '', text: '' });
     setSaving(true);
 
+    // Stop update if there's no authenticated Firebase user
     if (!user) {
-      setMessage({ type: "error", text: "No authenticated user found." });
+      setMessage({ type: 'error', text: 'No authenticated user found.' });
       setSaving(false);
       return;
     }
 
-    const isEmailChanging =
-      form.email.trim().toLowerCase() !== (user.email || "").toLowerCase();
+    // Determine which types of account info have changed
+    const isEmailChanging = form.email.trim().toLowerCase() !== (user.email || '').toLowerCase();
     const isPasswordChanging = Boolean(form.newPassword);
     const isProfileChanging =
-      form.name.trim() !== (profile?.name || user.displayName || "") ||
-      form.avatar.trim() !== (profile?.avatar || user.photoURL || "");
+      form.name.trim() !== (profile?.name || user.displayName || '') ||
+      form.avatar.trim() !== (profile?.avatar || user.photoURL || '');
 
-    // Validate password match/length up front, before any reauth call
+    // Validate new password before attempting Firebase re-auth
     if (isPasswordChanging) {
       if (form.newPassword !== form.confirmPassword) {
-        setMessage({ type: "error", text: "New passwords do not match." });
+        setMessage({ type: 'error', text: 'New passwords do not match.' });
         setSaving(false);
         return;
       }
+
       if (form.newPassword.length < 6) {
         setMessage({
-          type: "error",
-          text: "Password must be at least 6 characters.",
+          type: 'error',
+          text: 'Password must be at least 6 characters.',
         });
         setSaving(false);
         return;
       }
     }
 
-    // Explicitly require current password for any security-sensitive change
+    // Require current password before making email or password change
     if ((isEmailChanging || isPasswordChanging) && !form.currentPassword) {
       setMessage({
-        type: "error",
-        text: "Please enter your current password to authorize email or password changes.",
+        type: 'error',
+        text: 'Please enter your current password to authorize email or password changes.',
       });
       setSaving(false);
       return;
     }
 
     try {
-      // Re-authenticate if updating email or password
+      // Re-auth user before changing security-sensitive account details
       if (isEmailChanging || isPasswordChanging) {
-        const credential = EmailAuthProvider.credential(
-          user.email,
-          form.currentPassword,
-        );
+        const credential = EmailAuthProvider.credential(user.email, form.currentPassword);
         await reauthenticateWithCredential(user, credential);
       }
 
-      // Update name & avatar: Firebase profile + MongoDB sync (via prop)
+      // Update name and avatar in Firebase
+      // Then sync to DB
       if (isProfileChanging) {
         await updateFirebaseProfile(user, {
           displayName: form.name.trim(),
           photoURL: form.avatar.trim(),
         });
+
         await updateProfile({
           name: form.name.trim(),
           avatar: form.avatar.trim(),
         });
+
+        // Refresh authenticated user to reflect updated Firebase profile
         await refreshUser();
       }
 
@@ -128,40 +130,38 @@ export default function ProfileForm({ user, profile, updateProfile }) {
         await updatePassword(user, form.newPassword);
       }
 
-      // Email changes go through verification, never applied immediately
+      // Send verificatioin email for email changes
       if (isEmailChanging) {
-        // TODO: Requires testing in production version
         const actionCodeSettings = {
           url: `${window.location.origin}/login?emailVerified=true`,
           handleCodeInApp: true,
         };
 
-        await verifyBeforeUpdateEmail(
-          user,
-          form.email.trim(),
-          actionCodeSettings,
-        );
+        await verifyBeforeUpdateEmail(user, form.email.trim(), actionCodeSettings);
+
         setMessage({
-          type: "success",
+          type: 'success',
           text: `Verification link sent to ${form.email}! Please check your inbox (and spam/junk folder) to complete your email update.`,
         });
       } else if (isProfileChanging || isPasswordChanging) {
-        setMessage({ type: "success", text: "Profile updated successfully." });
+        setMessage({ type: 'success', text: 'Profile updated successfully.' });
       } else {
-        setMessage({ type: "success", text: "No changes were detected." });
+        setMessage({ type: 'success', text: 'No changes were detected.' });
       }
 
       // Clear sensitive fields and exit edit mode on success
       setForm((prev) => ({
         ...prev,
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
       }));
+
       setIsEditing(false);
       setShowPasswordFields(false);
     } catch (err) {
-      setMessage({ type: "error", text: getFriendlyAuthError(err) });
+      // Convert Firebase errors into user-friendly messages
+      setMessage({ type: 'error', text: getFriendlyAuthError(err) });
     } finally {
       setSaving(false);
     }
@@ -178,12 +178,10 @@ export default function ProfileForm({ user, profile, updateProfile }) {
               ) : (
                 <User size={18} className="text-blue-600" />
               )}
-              {isEditing ? "Edit Profile" : "Profile Information"}
+              {isEditing ? 'Edit Profile' : 'Profile Information'}
             </h3>
             <p className="text-sm text-gray-500 mt-0.5">
-              {isEditing
-                ? "Update your personal information"
-                : "Your account details"}
+              {isEditing ? 'Update your personal information' : 'Your account details'}
             </p>
           </div>
           {!isEditing && (
@@ -203,17 +201,13 @@ export default function ProfileForm({ user, profile, updateProfile }) {
         {message.text && (
           <div
             className={`mb-6 p-4 rounded-xl flex items-center gap-3 animate-fade-slide-in ${
-              message.type === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
+              message.type === 'success'
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
             }`}
-            role={message.type === "success" ? "status" : "alert"}
+            role={message.type === 'success' ? 'status' : 'alert'}
           >
-            {message.type === "success" ? (
-              <CheckCircle size={20} />
-            ) : (
-              <AlertCircle size={20} />
-            )}
+            {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
             {message.text}
           </div>
         )}
@@ -252,8 +246,8 @@ export default function ProfileForm({ user, profile, updateProfile }) {
                 placeholder="https://example.com/avatar.jpg"
                 className={`w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm ${
                   isEditing
-                    ? "border-gray-300 bg-white hover:border-blue-300"
-                    : "border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
+                    ? 'border-gray-300 bg-white hover:border-blue-300'
+                    : 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed'
                 }`}
               />
             </div>
@@ -274,8 +268,8 @@ export default function ProfileForm({ user, profile, updateProfile }) {
               placeholder="Your name"
               className={`w-full px-4 py-3.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                 isEditing
-                  ? "border-gray-300 bg-white hover:border-blue-300"
-                  : "border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
+                  ? 'border-gray-300 bg-white hover:border-blue-300'
+                  : 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed'
               }`}
             />
           </div>
@@ -295,8 +289,8 @@ export default function ProfileForm({ user, profile, updateProfile }) {
               placeholder="your@email.com"
               className={`w-full px-4 py-3.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                 isEditing
-                  ? "border-gray-300 bg-white hover:border-blue-300"
-                  : "border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
+                  ? 'border-gray-300 bg-white hover:border-blue-300'
+                  : 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed'
               }`}
             />
           </div>
@@ -310,15 +304,13 @@ export default function ProfileForm({ user, profile, updateProfile }) {
                 Current Password Required
               </label>
               <p className="text-xs text-amber-700">
-                Enter your password to verify your identity when changing your
-                email address or password.
+                Enter your password to verify your identity when changing your email address or
+                password.
               </p>
               <input
                 type="password"
                 value={form.currentPassword}
-                onChange={(e) =>
-                  setForm({ ...form, currentPassword: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
                 placeholder="Enter current password"
                 className="w-full px-4 py-3 border border-amber-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-sm"
               />
@@ -333,9 +325,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
               className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors cursor-pointer"
             >
               <Key size={16} />
-              {showPasswordFields
-                ? "Hide password fields"
-                : "Change account password"}
+              {showPasswordFields ? 'Hide password fields' : 'Change account password'}
             </button>
           )}
 
@@ -343,9 +333,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
             <div className="space-y-4 p-5 bg-gray-50 rounded-xl border border-gray-200">
               <div className="flex items-center gap-2 mb-2">
                 <Shield size={16} className="text-blue-500" />
-                <h4 className="text-sm font-semibold text-gray-700">
-                  New Password
-                </h4>
+                <h4 className="text-sm font-semibold text-gray-700">New Password</h4>
                 <span className="text-xs text-gray-400 ml-2">(Optional)</span>
               </div>
 
@@ -357,9 +345,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
                   <input
                     type="password"
                     value={form.newPassword}
-                    onChange={(e) =>
-                      setForm({ ...form, newPassword: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
                     placeholder="Min 6 characters"
                     className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white hover:border-blue-300"
                   />
@@ -371,9 +357,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
                   <input
                     type="password"
                     value={form.confirmPassword}
-                    onChange={(e) =>
-                      setForm({ ...form, confirmPassword: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                     placeholder="Confirm new password"
                     className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white hover:border-blue-300"
                   />
@@ -391,7 +375,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
                 className="flex-1 bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-95 cursor-pointer"
               >
                 <Save size={18} />
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
               <button
                 type="button"
@@ -399,7 +383,7 @@ export default function ProfileForm({ user, profile, updateProfile }) {
                   setIsEditing(false);
                   setShowPasswordFields(false);
                   resetForm();
-                  setMessage({ type: "", text: "" });
+                  setMessage({ type: '', text: '' });
                 }}
                 className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3.5 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
               >

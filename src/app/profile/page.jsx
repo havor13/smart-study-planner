@@ -12,12 +12,14 @@ export default function ProfilePage() {
   const router = useRouter();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
 
+  // Redirect unauthenticated users to login page after auth state is resolved
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
     }
   }, [user, authLoading, router]);
 
+  // Wait for both Firebase auth and DB profile to load
   if (authLoading || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -29,13 +31,16 @@ export default function ProfilePage() {
     );
   }
 
+  // Prevent profile page from rendering without authenticated user
   if (!user) return null;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-          <span className="bg-linear-to-r from-blue-500 to-indigo-600 text-white p-2 rounded-xl">👤</span>
+          <span className="bg-linear-to-r from-blue-500 to-indigo-600 text-white p-2 rounded-xl">
+            👤
+          </span>
           My Profile
         </h1>
         <p className="text-gray-500 mt-1 ml-12">View and manage your account information</p>

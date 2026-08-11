@@ -1,0 +1,24 @@
+# Build / Output
+dist/
+build/
+.next/
+out/
+
+# Dependencies
+node_modules/
+
+# Environments and secrets
+.env*
+*.local
+
+# Locks and logs
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+*.log
+
+# System/IDE configs
+.vscode/
+.idea/
+.DS_Store

@@ -1,48 +1,54 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { LogOut } from "lucide-react";
-import LogoutButton from "@/app/components/auth/LogoutButton";
-import { useAuth } from "@/app/context/AuthContext";
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { LogOut } from 'lucide-react';
+import LogoutButton from '@/app/components/auth/LogoutButton';
+import { useAuth } from '@/app/context/AuthContext';
 
 const Header = () => {
   const { user } = useAuth();
   const [avatarError, setAvatarError] = useState(false);
 
-  // Reset the error flag whenever the photo URL changes
+  // Reset the error flag whenever the photo URL itself changes
   useEffect(() => {
     setAvatarError(false);
   }, [user?.photoURL]);
 
+  // Generate up to two initials from user's display name
+  // Or fallback to first letter in their email
   const getInitials = () => {
     if (user?.displayName) {
       return user.displayName
-        .split(" ")
+        .split(' ')
         .map((n) => n[0])
-        .join("")
+        .join('')
         .toUpperCase()
         .slice(0, 2);
     }
     if (user?.email) {
       return user.email[0].toUpperCase();
     }
-    return "JD";
+    return 'U'; // "U" for user as last defensive fallback
   };
 
+  // Use display name when avaiable
+  // Or derive name from email
   const getUserName = () => {
     if (user?.displayName) return user.displayName;
-    if (user?.email) return user.email.split("@")[0];
-    return "User";
+    if (user?.email) return user.email.split('@')[0];
+    return 'User';
   };
 
+  // Display greeting based on current time of day
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
   };
 
+  // Show users's profile photo when valid photo URL is available
   const showAvatarImage = Boolean(user?.photoURL) && !avatarError;
 
   return (
@@ -54,8 +60,7 @@ const Header = () => {
             {getGreeting()} <span className="hidden lg:inline">👋</span>
           </h2>
           <p className="text-xs text-gray-400 truncate">
-            Welcome back,{" "}
-            <span className="text-gray-500 font-medium">{getUserName()}</span>
+            Welcome back, <span className="text-gray-500 font-medium">{getUserName()}</span>
           </p>
         </div>
 
@@ -85,9 +90,7 @@ const Header = () => {
               <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
             <div className="hidden md:block">
-              <p className="text-sm font-semibold text-gray-800">
-                {getUserName()}
-              </p>
+              <p className="text-sm font-semibold text-gray-800">{getUserName()}</p>
               <p className="text-xs text-gray-400">Student</p>
             </div>
           </Link>

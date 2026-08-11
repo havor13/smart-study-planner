@@ -3,49 +3,44 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
-const TaskForm = ({
-  task,
-  courses = [],
-  onSubmit,
-  onClose,
-  readOnly = false,
-}) => {
+const TaskForm = ({ task, courses = [], onSubmit, onClose, readOnly = false }) => {
   const [formData, setFormData] = useState({
     title: task?.title || '',
     description: task?.description || '',
     dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
     priority: task?.priority || 'medium',
-    course: task?.course || task?.courseCode || task?.courseId?.courseCode || '',  // Changed from 'category' to 'course'
+    course: task?.course || task?.courseCode || task?.courseId?.courseCode || '', // Changed from 'category' to 'course'
     status: task?.status || 'pending',
   });
 
-  // Close the modal on Escape key
   useEffect(() => {
+    // Allow form to be closed with `ESC` key
+    // Clean up listener on unmount
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && onClose) onClose();
     };
+
     window.addEventListener('keydown', handleKeyDown);
+
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const normalizedCode = formData.course
-        .toUpperCase()
-        .replace(/\s+/g, "");
+    // Normalize entered course code
+    // Spacing and letter cose do not affect course lookup
+    const normalizedCode = formData.course.toUpperCase().replace(/\s+/g, '');
 
+    // Find matching course from user's existing courses
     const selectedCourse = courses.find(
-        c =>
-            c.courseCode
-                .toUpperCase()
-                .replace(/\s+/g, "") === normalizedCode
+      (c) => c.courseCode.toUpperCase().replace(/\s+/g, '') === normalizedCode,
     );
 
     onSubmit({
-        ...formData,
-        dueDate: new Date(formData.dueDate),
-        courseId: selectedCourse?._id || null,
+      ...formData,
+      dueDate: new Date(formData.dueDate),
+      courseId: selectedCourse?._id || null,
     });
   };
 
@@ -81,9 +76,7 @@ const TaskForm = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Task Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Task Title *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Task Title *</label>
             <input
               type="text"
               value={formData.title}
@@ -97,9 +90,7 @@ const TaskForm = ({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -113,9 +104,7 @@ const TaskForm = ({
           {/* Due Date + Priority */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Due Date
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
               <input
                 type="date"
                 value={formData.dueDate}
@@ -127,9 +116,7 @@ const TaskForm = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Priority
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
@@ -145,9 +132,7 @@ const TaskForm = ({
 
           {/* Course (replaces Category) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Course
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
 
             <input
               list="course-list"
@@ -155,9 +140,7 @@ const TaskForm = ({
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  course: e.target.value
-                    .toUpperCase()
-                    .replace(/\s+/g, ""),
+                  course: e.target.value.toUpperCase().replace(/\s+/g, ''),
                 })
               }
               className={inputClass()}
@@ -167,19 +150,14 @@ const TaskForm = ({
 
             <datalist id="course-list">
               {courses.map((course) => (
-                <option
-                  key={course._id}
-                  value={course.courseCode}
-                />
+                <option key={course._id} value={course.courseCode} />
               ))}
             </datalist>
           </div>
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}

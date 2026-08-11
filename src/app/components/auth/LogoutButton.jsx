@@ -20,13 +20,14 @@ const LogoutButton = ({
 
   const handleLogout = async (e) => {
     // Prevent triggering parent container onClick handlers
-    e.stopPropagation(); 
-    
+    e.stopPropagation();
+
     if (onClick) {
       onClick(e);
     }
 
     try {
+      // Sign out through AuthContext before redirecting to /login
       await logout();
       router.push('/login');
     } catch (error) {
@@ -35,20 +36,12 @@ const LogoutButton = ({
   };
 
   return (
-    <button
-      onClick={handleLogout}
-      className={className}
-      title={title}
-      type="button"
-    >
+    <button onClick={handleLogout} className={className} title={title} type="button">
       {children ? (
         children
       ) : (
         <>
-          <LogOut
-            size={iconSize}
-            className={iconClassName}
-          />
+          <LogOut size={iconSize} className={iconClassName} />
           {showLabel && <span>{label}</span>}
         </>
       )}

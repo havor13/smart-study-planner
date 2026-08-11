@@ -1,15 +1,18 @@
-import { connectDB } from "@/lib/mongodb";
-import Reminder from "@/models/Reminder";
+/** API ENDPOINT FOR FUTURE IMPLEMENTATION
+ * Reminders for tasks
+ */
+import { connectDB } from '@/lib/mongodb';
+import Reminder from '@/models/Reminder';
 
 export default async function handler(req, res) {
   await connectDB();
 
-  if (req.method === "GET") {
+  if (req.method === 'GET') {
     const reminders = await Reminder.find({});
     return res.status(200).json(reminders);
   }
 
-  if (req.method === "POST") {
+  if (req.method === 'POST') {
     try {
       const newReminder = new Reminder(req.body);
       await newReminder.save();
@@ -19,5 +22,5 @@ export default async function handler(req, res) {
     }
   }
 
-  res.status(405).json({ message: "Method not allowed" });
+  res.status(405).json({ message: 'Method not allowed' });
 }

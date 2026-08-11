@@ -31,13 +31,10 @@ const Sidebar = () => {
     { id: 'timer', label: 'Timer', icon: Timer, href: '/timer' },
   ];
 
-  const accountItems = [
-    { id: 'profile', label: 'Profile', icon: User, href: '/profile' },
-  ];
+  const accountItems = [{ id: 'profile', label: 'Profile', icon: User, href: '/profile' }];
 
-  // Only used to keep the collapsed (icon-only) look off mobile screens.
-  // The drawer itself is positioned with pure CSS below, so it never
-  // reserves layout width on mobile regardless of JS state.
+  // Detect mobile sceen sizes
+  // Update layout when window resizes
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -45,15 +42,14 @@ const Sidebar = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Auto-close the drawer when navigating on mobile.
-  // Adjusted during render (not in an effect) to avoid an extra
-  // commit/render pass on every navigation.
+  // Auto-close mobile drawer when user navigates to different page
   if (pathname !== prevPathname) {
     setPrevPathname(pathname);
     setIsOpen(false);
   }
 
-  // Close the drawer on Escape and lock body scroll while it is open
+  // Close mobile drawer on 'Esc'
+  // Prevent background scrolling while drawer is open
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
@@ -192,9 +188,7 @@ const Sidebar = () => {
             </p>
           )}
 
-          <div className="space-y-1">
-            {menuItems.map(renderNavLink)}
-          </div>
+          <div className="space-y-1">{menuItems.map(renderNavLink)}</div>
         </nav>
 
         {/* Bottom - ACCOUNT section (Profile + Logout) */}

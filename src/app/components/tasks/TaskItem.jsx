@@ -8,9 +8,11 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // Support both DB's _id and legacy frontend id
   const taskId = task._id || task.id;
 
-  // Extract course code dynamically from populated object, direct key, or legacy prop
+  // Extract course code from populated course obkect
+  // Or fallback to the older direct course fields
   const courseCode =
     typeof task.courseId === 'object' && task.courseId !== null
       ? task.courseId.courseCode
@@ -28,32 +30,39 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
     pending: <Circle className="text-gray-400" size={20} />,
   };
 
+  // Cycle task through available statuses when toggled
   const handleStatusToggle = () => {
     const statusMap = {
       pending: 'in-progress',
       'in-progress': 'completed',
       completed: 'pending',
     };
+
     onToggle(taskId, statusMap[task.status]);
   };
 
+  // Open confirmation modal instead of instant deletion
   const handleDeleteClick = () => {
     setConfirmDelete(true);
   };
 
+  // Close confirmation modal and delete task after
   const handleConfirmDelete = () => {
     setConfirmDelete(false);
     onDelete(taskId);
   };
 
   if (compact) {
+    // Compact layout used when task is displayed in smaller views
     return (
       <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
         <div className="flex items-center gap-2">
           <button onClick={handleStatusToggle} className="hover:scale-110 transition-transform">
             {statusIcons[task.status]}
           </button>
-          <span className={`text-sm ${task.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+          <span
+            className={`text-sm ${task.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-700'}`}
+          >
             {task.title}
           </span>
         </div>
@@ -73,19 +82,26 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete, compact }) => {
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3 flex-1">
-            <button onClick={handleStatusToggle} className="mt-1 hover:scale-110 transition-transform cursor-pointer">
+            <button
+              onClick={handleStatusToggle}
+              className="mt-1 hover:scale-110 transition-transform cursor-pointer"
+            >
               {statusIcons[task.status]}
             </button>
             <div className="flex-1">
-              <h3 className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+              <h3
+                className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-800'}`}
+              >
                 {task.title}
               </h3>
-              {task.description && (
-                <p className="text-sm text-gray-500 mt-1">{task.description}</p>
-              )}
+              {task.description && <p className="text-sm text-gray-500 mt-1">{task.description}</p>}
               <div className="flex items-center gap-3 mt-2 flex-wrap">
-                <span className={`text-xs px-2.5 py-0.5 rounded-full ${priorityColors[task.priority]}`}>
-                  {task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : ''}
+                <span
+                  className={`text-xs px-2.5 py-0.5 rounded-full ${priorityColors[task.priority]}`}
+                >
+                  {task.priority
+                    ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1)
+                    : ''}
                 </span>
 
                 {/* Render Course Code Badge */}

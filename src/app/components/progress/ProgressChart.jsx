@@ -15,7 +15,7 @@ import { Pie, Bar } from 'react-chartjs-2';
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 const ProgressChart = ({ tasks = [] }) => {
-  // Calculate status distribution stats matching model enum
+  // Calculate number of tasks in each status using the model's status enums
   const total = tasks.length;
   const completed = tasks.filter((t) => t.status === 'completed').length;
   const inProgress = tasks.filter((t) => t.status === 'in-progress').length;
@@ -32,11 +32,12 @@ const ProgressChart = ({ tasks = [] }) => {
     ],
   };
 
-  // Aggregate tasks dynamically by populated courseCode (or fallback)
+  // Group tasks by course and track total and completed tasks for each course
   const courseCounts = {};
 
   tasks.forEach((task) => {
-    // Get course code from populated object or fallback label
+    // Use populated course code when vailable
+    // Or group task as general
     const courseCode =
       typeof task.courseId === 'object' && task.courseId?.courseCode
         ? task.courseId.courseCode
@@ -77,9 +78,7 @@ const ProgressChart = ({ tasks = [] }) => {
           label: (context) => {
             const course = categories[context.dataIndex];
             const stats = courseCounts[course];
-            return stats
-              ? `Completed: ${stats.completed} of ${stats.total}`
-              : 'No tasks';
+            return stats ? `Completed: ${stats.completed} of ${stats.total}` : 'No tasks';
           },
         },
       },
@@ -112,18 +111,14 @@ const ProgressChart = ({ tasks = [] }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="bg-white p-4 rounded-xl border border-gray-50">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">
-          Task Status Distribution
-        </h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Task Status Distribution</h3>
         <div className="h-[220px] relative flex items-center justify-center">
           <Pie data={pieData} options={pieOptions} />
         </div>
       </div>
 
       <div className="bg-white p-4 rounded-xl border border-gray-50">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">
-          Completed Tasks by Course
-        </h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Completed Tasks by Course</h3>
         <div className="h-[220px] relative">
           <Bar data={barData} options={barOptions} />
         </div>

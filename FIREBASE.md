@@ -15,4 +15,5 @@ This project uses a shared Firebase project for authentication.
 **Firebase Project:** Smart Study Planner
 
 **Authentication Providers:**
+
 - Email/Password

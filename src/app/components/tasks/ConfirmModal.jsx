@@ -11,12 +11,14 @@ const ConfirmModal = ({
   onConfirm,
   onCancel,
 }) => {
-  // Close on Escape key
+  // Allow modal to close with `Esc`
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && onCancel) onCancel();
     };
+
     window.addEventListener('keydown', handleKeyDown);
+
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onCancel]);
 
@@ -48,9 +50,7 @@ const ConfirmModal = ({
           </button>
         </div>
 
-        {message && (
-          <p className="text-sm text-gray-500 mb-6 leading-relaxed">{message}</p>
-        )}
+        {message && <p className="text-sm text-gray-500 mb-6 leading-relaxed">{message}</p>}
 
         <div className="flex gap-3">
           <button

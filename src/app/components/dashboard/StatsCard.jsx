@@ -11,9 +11,7 @@ const StatsCard = ({ title, value, icon, color, bg, subtitle }) => {
           <p className={`text-2xl font-bold mt-1 ${color}`}>{value}</p>
           {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
         </div>
-        <div className={`p-3 rounded-full ${bg}`}>
-          {icon}
-        </div>
+        <div className={`p-3 rounded-full ${bg}`}>{icon}</div>
       </div>
     </div>
   );

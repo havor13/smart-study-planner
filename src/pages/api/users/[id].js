@@ -1,11 +1,11 @@
-import { connectDB } from "@/lib/mongodb";
-import User from "@/models/User";
-import { verifyAuth } from "@utils/verifyAuth";
-import mongoose from "mongoose";
+import { connectDB } from '@/lib/mongodb';
+import User from '@/models/User';
+import { verifyAuth } from '@utils/verifyAuth';
+import mongoose from 'mongoose';
 
 export default async function handler(req, res) {
   // Protect route, derive authenticated user from token
- const auth = await verifyAuth(req, res);
+  const auth = await verifyAuth(req, res);
   if (!auth) return;
 
   const { authUser } = auth;
@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
   // Validate ID format (ObjectId or Firebase UID)
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ error: "Invalid User ID format" });
+    return res.status(400).json({ error: 'Invalid User ID format' });
   }
 
   // Ensure strict authorization
@@ -26,18 +26,18 @@ export default async function handler(req, res) {
   }
 
   switch (req.method) {
-    case "GET":
+    case 'GET':
       try {
-        const profile = await User.findById(id).select("-__v");
+        const profile = await User.findById(id).select('-__v');
         if (!profile) {
-          return res.status(404).json({ error: "User profile not found" });
+          return res.status(404).json({ error: 'User profile not found' });
         }
         return res.status(200).json(profile);
       } catch (err) {
-        return res.status(500).json({ error: "Failed to fetch user profile" });
+        return res.status(500).json({ error: 'Failed to fetch user profile' });
       }
 
-    case "PUT":
+    case 'PUT':
       try {
         const { name, avatar } = req.body;
 
@@ -50,29 +50,29 @@ export default async function handler(req, res) {
         const updatedProfile = await User.findByIdAndUpdate(
           id,
           { $set: updateData },
-          { new: true, runValidators: true }
-        ).select("-__v");
+          { new: true, runValidators: true },
+        ).select('-__v');
 
         if (!updatedProfile) {
-          return res.status(404).json({ error: "User profile not found" });
+          return res.status(404).json({ error: 'User profile not found' });
         }
 
         return res.status(200).json(updatedProfile);
       } catch (err) {
-        return res.status(400).json({ error: err.message || "Failed to update profile" });
+        return res.status(400).json({ error: err.message || 'Failed to update profile' });
       }
 
-    case "DELETE":
+    case 'DELETE':
       try {
         // Allow user to delete their account record if necessary
         await User.findByIdAndDelete(id);
-        return res.status(200).json({ message: "User profile deleted successfully" });
+        return res.status(200).json({ message: 'User profile deleted successfully' });
       } catch (err) {
-        return res.status(500).json({ error: "Failed to delete user profile" });
+        return res.status(500).json({ error: 'Failed to delete user profile' });
       }
 
     default:
-      res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
+      res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
       return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
   }
 }

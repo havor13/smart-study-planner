@@ -4,20 +4,20 @@ import { useState, useEffect } from 'react';
 import { UserCircle, Calendar, GraduationCap, Mail } from 'lucide-react';
 
 export default function ProfileCard({ user, profile }) {
+  // Prefer profile data from DB
+  // Firebase user data for fallback
   const [avatarError, setAvatarError] = useState(false);
   const [prevAvatar, setPrevAvatar] = useState(profile?.avatar);
   const [fallbackDate] = useState(() => new Date());
 
-  // Reset the broken-image fallback whenever the avatar URL itself changes.
-  // Adjusted during render (not in an effect) to avoid an extra render pass.
+  // Reset broken-image fallback whenever the avatar URL changes
+  // Adjusted during render (not in an effect) to avoid extra render pass
   if (profile?.avatar !== prevAvatar) {
     setPrevAvatar(profile?.avatar);
     setAvatarError(false);
   }
 
-  const memberSince = new Date(
-    profile?.createdAt || user?.metadata?.creationTime || fallbackDate
-  );
+  const memberSince = new Date(profile?.createdAt || user?.metadata?.creationTime || fallbackDate);
   const formattedDate = memberSince.toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric',

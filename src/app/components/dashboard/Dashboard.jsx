@@ -43,11 +43,14 @@ const Dashboard = () => {
 
         if (pomodoroRes && pomodoroRes.ok) {
           const pomodoroData = await pomodoroRes.json();
-          
-          // Calculate total focus minutes for today
+
+          // Sum completed Pomodoro session recoreded today
           const today = new Date().toDateString();
           const todayMinutes = pomodoroData
-            .filter((session) => new Date(session.createdAt).toDateString() === today && session.completed)
+            .filter(
+              (session) =>
+                new Date(session.createdAt).toDateString() === today && session.completed,
+            )
             .reduce((acc, curr) => acc + (curr.durationMinutes || 0), 0);
 
           setFocusMinutes(todayMinutes);
@@ -62,7 +65,7 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [user]);
 
-  // Dynamic task calculations
+  // Calculate task stats used by dashboard cards
   const totalTasks = safeTasks.length;
   const completedTasks = safeTasks.filter((t) => t.status === 'completed').length;
   const inProgressTasks = safeTasks.filter((t) => t.status === 'in-progress').length;
@@ -70,7 +73,7 @@ const Dashboard = () => {
 
   const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // Calculate upcoming deadlines within the next 7 days
+  // Count unifinished tasks due within seven days
   const upcomingDeadlinesCount = safeTasks.filter((t) => {
     if (!t.dueDate || t.status === 'completed') return false;
     const due = new Date(t.dueDate);
@@ -141,7 +144,9 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
           <h3 className="font-semibold text-gray-800 text-lg">📚 Study Today</h3>
-          <p className="text-sm text-gray-500 mt-1">You have {pendingTasks + inProgressTasks} tasks pending</p>
+          <p className="text-sm text-gray-500 mt-1">
+            You have {pendingTasks + inProgressTasks} tasks pending
+          </p>
           <Link
             href="/tasks"
             className="inline-block mt-4 text-sm text-blue-600 font-medium hover:text-blue-700 hover:underline"

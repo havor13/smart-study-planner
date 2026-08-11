@@ -16,9 +16,7 @@ export default function RootLayout({ children }) {
     return (
       <html lang="en">
         <body>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <AuthProvider>{children}</AuthProvider>
         </body>
       </html>
     );
@@ -33,9 +31,7 @@ export default function RootLayout({ children }) {
               <Sidebar />
               <div className="flex-1 min-h-screen transition-all duration-300">
                 <Header />
-                <main className="p-6 max-w-7xl mx-auto">
-                  {children}
-                </main>
+                <main className="p-6 max-w-7xl mx-auto">{children}</main>
               </div>
             </div>
           </ProtectedRoute>
