@@ -9,6 +9,7 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // To force dependent components to re-render after refreshing current Firebase user's data
   const [, forceRerender] = useState(0);
@@ -16,12 +17,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Reload Firebase user to retrive latest account attributes
-        // For changes like newly verified email or updated profile info
         await user.reload();
         setUser(auth.currentUser);
-
-        // Sync latest Firebase user data to DB
+        setLoggingOut(false); // clear once a real session exists again
         fetch('/api/users/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -35,10 +33,8 @@ export function AuthProvider({ children }) {
       } else {
         setUser(null);
       }
-
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -52,15 +48,12 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
+    setLoggingOut(true);
+    await signOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, logout, refreshUser, loggingOut }}>
       {children}
     </AuthContext.Provider>
   );

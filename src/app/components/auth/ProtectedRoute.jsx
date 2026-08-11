@@ -5,15 +5,15 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
 
 export default function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loading, loggingOut } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     // Redirect unauthenticated users after complete initial auth check
-    if (!loading && !user) {
+    if (!loading && !user && !loggingOut) {
       router.replace('/login');
     }
-  }, [user, loading, router]);
+  }, [user, loading, loggingOut, router]);
 
   if (loading) {
     return (
