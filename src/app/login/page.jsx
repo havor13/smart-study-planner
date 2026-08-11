@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getFriendlyAuthError } from '@/lib/firebaseErrors';
@@ -26,11 +26,10 @@ const AuthForm = ({ type, active, title, children, onSubmit }) => (
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const message = searchParams.get('message');
   const [view, setView] = useState('signup');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -64,6 +63,12 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
+    const urlMessage = new URLSearchParams(window.location.search).get('message');
+
+    if (urlMessage === 'email-verification') {
+      setMessage(urlMessage);
+    }
+
     const unsubscribe = auth.onAuthStateChanged((user) => {
       // Avoid redirecting whil current signin.signup submission is still processing
       if (user && !loading) {
@@ -149,18 +154,6 @@ export default function LoginPage() {
         </div>
       )}
       <div className="login-card">
-        {message === 'email-verification' && (
-          <div
-            className="w-[90%] max-w-125 mx-auto mt-5 mb-4 px-5 py-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm text-center"
-            role="status"
-          >
-            <strong className="block mb-1 font-semibold">Verification email sent.</strong>
-            <p>
-              Please check your inbox and your spam or junk folder. Verify your new email address
-              before logging in again.
-            </p>
-          </div>
-        )}
         <div
           className="card-bg"
           style={{ transform: isSignup ? 'translateX(0)' : 'translateX(100%)' }}
@@ -224,15 +217,6 @@ export default function LoginPage() {
         />
 
         <AuthForm type="signin" active={!isSignup} title="Sign In" onSubmit={handleSignIn}>
-          {message === 'email-verification' && (
-            <div className="success-message" role="status">
-              <strong>Verification email sent.</strong>
-              <p>
-                Please check your inbox and your spam or junk folder. Verify your new email address
-                before logging in again.
-              </p>
-            </div>
-          )}
           <input
             type="email"
             placeholder="Email"
